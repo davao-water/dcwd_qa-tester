@@ -16,7 +16,7 @@ export async function GET() {
   const [{ count, items }, { messages, newTickets }, requests] = await Promise.all([
     notifications.unread(user),
     notifications.counts(user),
-    can(user, "users.manage") ? auth.adminRequests() : null,
+    can(user, "users.requests") ? auth.adminRequests() : null,
   ]);
   return Response.json(
     { count, items, messages, newTickets, requests: requests ? requests.signUps + requests.resets : 0 },

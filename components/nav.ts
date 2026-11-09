@@ -9,7 +9,7 @@ import {
   UsersRoundIcon,
   type LucideIcon,
 } from "lucide-react";
-import { can, type Role } from "@/lib/auth/permissions";
+import { can, type Permitted, type Role } from "@/lib/auth/permissions";
 
 /** `soon` marks an item that is planned but not built yet; it renders disabled with that badge. */
 export type NavItem = { href: string; label: string; icon: LucideIcon; soon?: string };
@@ -35,10 +35,11 @@ const PAGES: NavItem[] = [
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
-export function navGroups(role: Role | null): NavGroup[] {
-  const tickets = can(role ? { role } : null, "dar.use") ? [...TICKETS_NAV, DAR_NAV] : TICKETS_NAV;
+/** Users shows for admins and for anyone lent "Sign-ups & password requests" (temporary access). */
+export function navGroups(user: Permitted | null): NavGroup[] {
+  const tickets = can(user, "dar.use") ? [...TICKETS_NAV, DAR_NAV] : TICKETS_NAV;
   const groups: NavGroup[] = [{ key: "tickets", label: "Menu", items: tickets }];
-  if (role === "ADMIN") groups.push({ key: "admin", label: "Admin", items: ADMIN_NAV });
+  if (can(user, "users.requests")) groups.push({ key: "admin", label: "Admin", items: ADMIN_NAV });
   return groups;
 }
 

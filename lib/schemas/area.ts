@@ -32,3 +32,11 @@ export const areaMembersInput = z
   })
   .refine((v) => !v.lead || v.members.includes(v.lead), { message: "The lead must also be a member", path: ["lead"] })
   .refine((v) => v.designers.every((d) => v.members.includes(d)), { message: "A UI/UX designer must also be a member", path: ["designers"] });
+
+/** Team & modules → Assign to modules: the same people added to many areas at once. */
+export const areaAssignInput = z.object({
+  areaIds: z.array(z.string().min(1)).min(1, "Tick at least one module").max(1000),
+  members: z.array(z.string().min(1)).min(1, "Tick at least one person").max(200),
+  lead: z.string().transform((v) => (v ? v : null)),
+  designers: z.array(z.string().min(1)).max(200).default([]),
+});

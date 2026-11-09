@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateTempPassword, hashPassword, verifyPassword } from "@/lib/auth/password";
-import { ACTIONS, can, isRole, ROLES, type Action, type Role } from "@/lib/auth/permissions";
+import { ACTIONS, can, GRANT_LABELS, GRANTABLE, isRole, ROLES, type Action, type Role } from "@/lib/auth/permissions";
 import { safeNext } from "@/lib/auth/safe-next";
 import { hashToken, newToken } from "@/lib/auth/store";
 
@@ -62,6 +62,7 @@ describe("permissions", () => {
     "tickets.verify": ["ADMIN", "QA"],
     "areas.manage": ["ADMIN"],
     "users.manage": ["ADMIN"],
+    "users.requests": ["ADMIN"],
     "projects.manage": ["ADMIN"],
     "workspace.manage": ["ADMIN"],
     "dar.use": ["QA", "DEV", "ADMIN"],
@@ -94,6 +95,22 @@ describe("permissions", () => {
 
   it.each(ACTIONS.flatMap((a) => ROLES.map((r) => [a, r] as const)))("%s for %s", (action, role) => {
     expect(can({ role }, action)).toBe(expected[action].includes(role));
+  });
+
+  it("lets temporary access lend only the grantable features, never Users itself", () => {
+    for (const role of ["QA", "DEV"] as const) {
+      for (const a of GRANTABLE) {
+        expect(can({ role }, a)).toBe(false);
+        expect(can({ role, grants: [a] }, a)).toBe(true);
+      }
+      // A stored name that isn't grantable is ignored, even if someone wrote it into the table.
+      expect(can({ role, grants: ["users.manage", "projects.manage"] }, "users.manage")).toBe(false);
+      expect(can({ role, grants: ["users.manage"] }, "projects.manage")).toBe(false);
+      // One feature lends nothing else.
+      for (const a of ACTIONS.filter((x) => x !== "users.requests")) expect(can({ role, grants: ["users.requests"] }, a)).toBe(can({ role }, a));
+    }
+    expect(GRANTABLE).not.toContain("users.manage");
+    for (const a of GRANTABLE) expect(GRANT_LABELS[a].label).toBeTruthy();
   });
 
   it("denies a signed-out visitor everything", () => {

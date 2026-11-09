@@ -5,7 +5,7 @@ import { BellIcon, ChevronRightIcon, ClockIcon, KeyRoundIcon, ShieldIcon, UserRo
 import { AvatarUpload } from "@/components/avatar-upload";
 import { PageHeader } from "@/components/page-header";
 import { SettingsSkeleton } from "@/components/skeletons";
-import { ROLE_LABELS } from "@/lib/auth/permissions";
+import { can, ROLE_LABELS } from "@/lib/auth/permissions";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { pushStore } from "@/lib/push/store";
@@ -64,7 +64,7 @@ async function SettingsBody() {
 
       <Group label="Workspace">
         <Row href="/team" icon={<UsersRoundIcon />} tone="green" label="Team & modules" />
-        {me.role === "ADMIN" ? <Row href="/admin/users" icon={<ShieldIcon />} tone="indigo" label="Users" value={<RequestsCount />} /> : null}
+        {can(me, "users.requests") ? <Row href="/admin/users" icon={<ShieldIcon />} tone="indigo" label="Users" value={<RequestsCount />} /> : null}
       </Group>
 
       <div className="overflow-hidden rounded-2xl bg-card shadow-[0_0.0625rem_0.125rem_rgba(20,22,40,0.06),0_0.125rem_0.5rem_rgba(20,22,40,0.04)]">

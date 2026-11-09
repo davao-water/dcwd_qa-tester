@@ -1,5 +1,31 @@
 # Changelog
 
+## Fix: the ticket filters show the module picked on the dashboard (2026-11-09)
+
+- Clicking a module on the dashboard filtered the ticket list, but the Module filter could still show the earlier
+  choice (often "All modules"). Every filter field now shows what the address says, after any link, tab or Back.
+
+## Temporary access: lend admin features for a few hours (2026-11-09)
+
+One database change: a new `TempAccess` table (migration `20261109000100_temp_access`, RLS on). Run `npm run db:deploy`.
+
+- **Admin → Users → Temporary access** (the timer icon, admins only): give a QA tester or developer chosen admin
+  features for 1–72 hours: **Sign-ups & password requests**, **Team & modules** or **All tickets**.
+- It ends by itself when the time is up, with no cron needed: an ended grant is ignored at once, and the daily
+  clean-up deletes it. **End now** stops it early. The person's row shows *Temp access* and when it ends.
+- Managing accounts and roles is never lent, so nobody can make themselves a permanent admin. Someone lent sign-ups
+  sees only the Approval and Password reset tabs, and can reset only passwords that were asked for, never an admin's.
+- New permission `users.requests` (approve and reject sign-ups, handle password requests); admins have it as before.
+
+## Assign people to many modules at once (2026-11-09)
+
+No database change.
+
+- **Team & modules → Assign to modules** (admins and Team Leads): tick the people (QA, developers, a lead, UI/UX), then
+  every module and sub-module they work on, and assign them all in one go. **All inside** ticks everything in a module.
+- It only adds people. Whoever is already in a module stays there. A lead picked here replaces each module's current lead,
+  and the old lead stays on as a member. To remove someone, use the module's **Members** button as before.
+
 ## My DAR fills itself from tickets, with day statuses and pasted attendance (2026-11-06)
 
 One database change: `DarReport.days` and `DarReport.autoCells` (migration `20261106000500_dar_days`). Run `npm run db:deploy`.

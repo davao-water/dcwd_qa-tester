@@ -2,8 +2,8 @@ import { adoptLegacyTemplate } from "@/lib/dar/template";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 
 // Supabase Free has no backups, so the laptop takes its own each night (scripts/backup.ts) as one JSON file.
-// Sessions, rate-limit hits, unsent uploads and read markers are left out: they are short-lived. After a restore people
-// sign in again, and tickets show as unread once.
+// Sessions, rate-limit hits, unsent uploads, read markers and temporary access are left out: they are short-lived.
+// After a restore people sign in again, tickets show as unread once, and any temporary access has ended.
 
 export const SNAPSHOT_VERSION = 1;
 

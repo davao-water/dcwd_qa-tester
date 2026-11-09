@@ -319,6 +319,10 @@ async function TicketList({
     reporter: f.reporter === "me" ? "me" : null,
   });
   const activeFilters = [f.type, f.area, f.category, f.status, devFilter, qaFilter].filter(Boolean).length + moreSet;
+  // The filter fields are uncontrolled (defaultValue) and Next keeps this page mounted between visits, so a link that
+  // changes the filters (a module on the dashboard, a tab) would leave the old choice showing. A new key per set of
+  // filters rebuilds the forms, so every field shows what the address says.
+  const formKey = JSON.stringify(f);
   // The phone sheet: every filter, one under the other.
   const sheetFields = (
     <>
@@ -392,7 +396,7 @@ async function TicketList({
             ) : null}
             <span className="md:hidden">
               <FilterSheet active={activeFilters}>
-                <form action="/tickets" className="grid gap-4">
+                <form key={formKey} action="/tickets" className="grid gap-4">
                   {sheetFields}
                 </form>
               </FilterSheet>
@@ -409,11 +413,12 @@ async function TicketList({
       {/* Phones: the filters button and one search field; the rest of the filters are in the sheet. */}
       <div className="flex items-center gap-2 md:hidden">
         <FilterSheet active={activeFilters}>
-          <form action="/tickets" className="grid gap-4">
+          <form key={formKey} action="/tickets" className="grid gap-4">
             {sheetFields}
           </form>
         </FilterSheet>
         <form
+          key={formKey}
           action="/tickets"
           role="search"
           className="relative min-w-0 flex-1"
@@ -493,6 +498,7 @@ async function TicketList({
       {/* Laptops: the filters in a card with visible labels. A choice applies at once; search applies on Enter. It stays a
           plain GET form, so it still works without scripts (the hidden Apply button). */}
       <form
+        key={formKey}
         action="/tickets"
         aria-label="Filter tickets"
         className="max-md:hidden"

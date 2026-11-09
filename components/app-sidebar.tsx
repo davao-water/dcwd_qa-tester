@@ -29,7 +29,7 @@ import { filterNavGroups, isActive, navGroups } from "./nav";
 import { NavCount, useNotifications } from "./notifications";
 import { UserMenu } from "./user-menu";
 
-export type SidebarUser = AvatarPerson & { role: Role };
+export type SidebarUser = AvatarPerson & { role: Role; grants: readonly string[] };
 
 // Brand, Search menu, 44 px menu items and the profile at the bottom follow the Base DCWD boards.
 // Minimised (the topbar's toggle or Ctrl+B), it springs down to a rail of icons: the brand text and the labels fade and
@@ -71,7 +71,7 @@ function SidebarView({ pathname, user }: { pathname: string | null; user: Sideba
   const { state } = useSidebar();
   const [query, setQuery] = useState("");
   // The search box is hidden in the rail, so what was typed there must not hide any icons.
-  const groups = state === "collapsed" ? navGroups(user?.role ?? null) : filterNavGroups(navGroups(user?.role ?? null), query);
+  const groups = state === "collapsed" ? navGroups(user) : filterNavGroups(navGroups(user), query);
   // Unread replies on My inbox, unopened new tickets on Tickets, and sign-up and password requests on Users.
   const counts: Record<string, { count: number; label: string }> = {
     "/inbox": { count: data?.messages ?? 0, label: "unread messages" },

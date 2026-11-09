@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { backTarget, breadcrumbs, filterNavGroups, isTabRoot, mobileTabFor, mobileTabs, mobileTitle, navGroups } from "@/components/nav";
 
 describe("Search menu", () => {
-  const labels = (query: string) => filterNavGroups(navGroups("ADMIN"), query).flatMap((g) => g.items.map((i) => i.label));
+  const labels = (query: string) => filterNavGroups(navGroups({ role: "ADMIN" }), query).flatMap((g) => g.items.map((i) => i.label));
 
   it("keeps everything when nothing is typed", () => {
-    expect(filterNavGroups(navGroups("ADMIN"), "   ")).toEqual(navGroups("ADMIN"));
+    expect(filterNavGroups(navGroups({ role: "ADMIN" }), "   ")).toEqual(navGroups({ role: "ADMIN" }));
   });
 
   it("matches any part of a name, in either case", () => {
@@ -14,8 +14,17 @@ describe("Search menu", () => {
   });
 
   it("drops a group with no match, and leaves nothing when no item matches", () => {
-    expect(filterNavGroups(navGroups("ADMIN"), "users").map((g) => g.key)).toEqual(["admin"]);
-    expect(filterNavGroups(navGroups("ADMIN"), "zzz")).toEqual([]);
+    expect(filterNavGroups(navGroups({ role: "ADMIN" }), "users").map((g) => g.key)).toEqual(["admin"]);
+    expect(filterNavGroups(navGroups({ role: "ADMIN" }), "zzz")).toEqual([]);
+  });
+
+  it("shows Users to admins and to anyone lent sign-ups and password requests", () => {
+    const keys = (u: Parameters<typeof navGroups>[0]) => navGroups(u).map((g) => g.key);
+    expect(keys({ role: "ADMIN" })).toEqual(["tickets", "admin"]);
+    expect(keys({ role: "QA" })).toEqual(["tickets"]);
+    expect(keys({ role: "QA", grants: ["areas.manage"] })).toEqual(["tickets"]);
+    expect(keys({ role: "QA", grants: ["users.requests"] })).toEqual(["tickets", "admin"]);
+    expect(keys(null)).toEqual(["tickets"]);
   });
 });
 
