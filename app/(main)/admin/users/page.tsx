@@ -4,6 +4,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SearchIcon, UsersIcon } from "lucide-react";
+import { ACTIVE_FILTER } from "@/components/active-filter";
 import { EmptyState } from "@/components/empty-state";
 import { FilterSelect } from "@/components/filter-select";
 import { Field } from "@/components/form-field";
@@ -176,7 +177,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                 <Field label="Search" htmlFor="uq" className="min-w-0 flex-[2_1_18.75rem]">
                   <div className="relative">
                     <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                    <Input id="uq" type="search" name="q" defaultValue={f.q} enterKeyHint="search" placeholder="Search nickname or email" className="pl-9" />
+                    <Input id="uq" type="search" name="q" defaultValue={f.q} enterKeyHint="search" placeholder="Search nickname or email" className={cn("pl-9", f.q && ACTIVE_FILTER)} />
                   </div>
                 </Field>
                 <Field label="Role" htmlFor="urole" className="min-w-0 flex-[1_1_9.5rem]">

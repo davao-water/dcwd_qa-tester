@@ -60,6 +60,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TicketBoard, type BoardCard } from "./board";
 import { FilterDate } from "@/components/filter-date";
+import { ACTIVE_FILTER } from "@/components/active-filter";
 import { FilterSelect } from "@/components/filter-select";
 import { FilterSheet } from "./filter-sheet";
 import { reporterOptions, ticketFormOptions } from "./options";
@@ -251,6 +252,20 @@ async function TicketList({
     f.status === p.status &&
     f.assignee === p.assignee &&
     f.reporter === p.reporter;
+  // Which filters are narrowing the list, for their highlight. A stage or person the open tab set itself isn't one.
+  const tab = QUICK.find((v) => isQuick(v.patch))?.patch;
+  const on = {
+    q: !!f.q,
+    type: !!f.type,
+    area: !!f.area,
+    category: !!f.category,
+    status: !!f.status && f.status !== tab?.status,
+    reporter: !!f.reporter && f.reporter !== tab?.reporter,
+    assignee: !!f.assignee && f.assignee !== tab?.assignee,
+    severity: !!f.severity,
+    priority: !!f.priority,
+  };
+  const lit = (active: boolean) => cn(active && ACTIVE_FILTER);
   const moreSet = [f.severity, f.priority, f.from, f.to].filter(Boolean).length;
   const filtered = !!(f.type || f.area || f.category || f.q || f.status || devFilter || qaFilter || moreSet);
   // Picking people: admins always; testers and developers on the All tab, where others' tickets are.
@@ -329,39 +344,39 @@ async function TicketList({
       {keep}
       {f.q ? <input type="hidden" name="q" value={f.q} /> : null}
       <Field label="Type" htmlFor="ftype">
-        <SelectField id="ftype" name="type" defaultValue={f.type ?? ""} options={options.type} />
+        <SelectField id="ftype" name="type" defaultValue={f.type ?? ""} options={options.type} className={lit(on.type)} />
       </Field>
       <Field label="Module" htmlFor="farea">
-        <SelectField id="farea" name="area" defaultValue={f.area ?? ""} groups={options.area} />
+        <SelectField id="farea" name="area" defaultValue={f.area ?? ""} groups={options.area} className={lit(on.area)} />
       </Field>
       <Field label="Category" htmlFor="fcategory">
-        <SelectField id="fcategory" name="category" defaultValue={f.category ?? ""} options={options.category} />
+        <SelectField id="fcategory" name="category" defaultValue={f.category ?? ""} options={options.category} className={lit(on.category)} />
       </Field>
       <Field label="Status" htmlFor="fstatus">
-        <SelectField id="fstatus" name="status" defaultValue={f.status ?? ""} options={options.status} />
+        <SelectField id="fstatus" name="status" defaultValue={f.status ?? ""} options={options.status} className={lit(on.status)} />
       </Field>
       {showQa ? (
         <Field label="QA tester" htmlFor="freporter">
-          <SelectField id="freporter" name="reporter" defaultValue={f.reporter ?? ""} options={options.reporter} />
+          <SelectField id="freporter" name="reporter" defaultValue={f.reporter ?? ""} options={options.reporter} className={lit(on.reporter)} />
         </Field>
       ) : null}
       {showDev ? (
         <Field label="Developer" htmlFor="fassignee">
-          <SelectField id="fassignee" name="assignee" defaultValue={f.assignee ?? ""} options={options.assignee} />
+          <SelectField id="fassignee" name="assignee" defaultValue={f.assignee ?? ""} options={options.assignee} className={lit(on.assignee)} />
         </Field>
       ) : null}
       <Field label="Severity" htmlFor="fseverity">
-        <SelectField id="fseverity" name="severity" defaultValue={f.severity ?? ""} options={options.severity} />
+        <SelectField id="fseverity" name="severity" defaultValue={f.severity ?? ""} options={options.severity} className={lit(on.severity)} />
       </Field>
       <Field label="Priority" htmlFor="fpriority">
-        <SelectField id="fpriority" name="priority" defaultValue={f.priority ?? ""} options={options.priority} />
+        <SelectField id="fpriority" name="priority" defaultValue={f.priority ?? ""} options={options.priority} className={lit(on.priority)} />
       </Field>
       <div className="grid grid-cols-2 gap-2.5">
         <Field label="Filed from" htmlFor="ffrom">
-          <Input id="ffrom" type="date" name="from" defaultValue={f.from ?? ""} max={f.to ?? undefined} />
+          <Input id="ffrom" type="date" name="from" defaultValue={f.from ?? ""} max={f.to ?? undefined} className={lit(!!f.from)} />
         </Field>
         <Field label="Filed to" htmlFor="fto">
-          <Input id="fto" type="date" name="to" defaultValue={f.to ?? ""} min={f.from ?? undefined} />
+          <Input id="fto" type="date" name="to" defaultValue={f.to ?? ""} min={f.from ?? undefined} className={lit(!!f.to)} />
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-2.5 pt-1">
@@ -449,7 +464,7 @@ async function TicketList({
             enterKeyHint="search"
             placeholder="Search tickets or #number"
             aria-label="Search tickets"
-            className="h-11 rounded-xl border-transparent pl-10 shadow-[0_0.0625rem_0.125rem_rgba(20,22,40,0.06),0_0.125rem_0.5rem_rgba(20,22,40,0.04)]"
+            className={cn("h-11 rounded-xl border-transparent pl-10 shadow-[0_0.0625rem_0.125rem_rgba(20,22,40,0.06),0_0.125rem_0.5rem_rgba(20,22,40,0.04)]", lit(on.q))}
           />
         </form>
       </div>
@@ -522,7 +537,7 @@ async function TicketList({
                 defaultValue={f.q}
                 enterKeyHint="search"
                 placeholder="Title, text or #number"
-                className="pl-9"
+                className={cn("pl-9", lit(on.q))}
               />
             </div>
           </Field>
@@ -563,17 +578,17 @@ async function TicketList({
             />
           </Field>
           <Field label="Status" htmlFor="tstatus" className="min-w-0 flex-[1_1_10rem]">
-            <FilterSelect id="tstatus" name="status" defaultValue={f.status ?? ""} options={options.status} />
+            <FilterSelect id="tstatus" name="status" defaultValue={f.status ?? ""} options={options.status} active={on.status} />
           </Field>
           {showQa ? (
             <Field label="QA tester" htmlFor="treporter" className="min-w-0 flex-[1_1_10.5rem]">
-              <FilterSelect id="treporter" name="reporter" defaultValue={f.reporter ?? ""} options={options.reporter} />
+              <FilterSelect id="treporter" name="reporter" defaultValue={f.reporter ?? ""} options={options.reporter} active={on.reporter} />
             </Field>
           ) : null}
           {/* A developer's own tabs are already "assigned to me"; on the All tab they can pick anyone. */}
           {showDev ? (
             <Field label="Developer" htmlFor="tassignee" className="min-w-0 flex-[1_1_10.5rem]">
-              <FilterSelect id="tassignee" name="assignee" defaultValue={f.assignee ?? ""} options={options.assignee} />
+              <FilterSelect id="tassignee" name="assignee" defaultValue={f.assignee ?? ""} options={options.assignee} active={on.assignee} />
             </Field>
           ) : null}
           {/* The less used ones fold away, and stay open while one is set. */}

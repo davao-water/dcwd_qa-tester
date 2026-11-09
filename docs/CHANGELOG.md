@@ -4,6 +4,8 @@
 
 - Clicking a module on the dashboard filtered the ticket list, but the Module filter could still show the earlier
   choice (often "All modules"). Every filter field now shows what the address says, after any link, tab or Back.
+- **Filters that are on stand out:** a filter or search box that is narrowing the list gets an accent border and
+  tint (Tickets, Users, Team, My inbox, and the phone filter sheet). A stage or person a tab set by itself stays plain.
 
 ## Temporary access: lend admin features for a few hours (2026-11-09)
 

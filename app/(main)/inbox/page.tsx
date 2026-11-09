@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { ArrowLeftIcon, ArrowRightIcon, MessagesSquareIcon, SearchIcon } from "lucide-react";
+import { ACTIVE_FILTER } from "@/components/active-filter";
 import { PageHeader } from "@/components/page-header";
 import { InboxSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,7 @@ async function Inbox({ searchParams }: { searchParams: PageProps<"/inbox">["sear
           <form action="/inbox" role="search" className="relative">
             {p.unread ? <input type="hidden" name="unread" value="1" /> : null}
             <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input type="search" name="q" defaultValue={p.q} enterKeyHint="search" placeholder="Search title or #number" aria-label="Search conversations" className="h-10 pl-9 text-sm" />
+            <Input type="search" name="q" defaultValue={p.q} enterKeyHint="search" placeholder="Search title or #number" aria-label="Search conversations" className={cn("h-10 pl-9 text-sm", p.q && ACTIVE_FILTER)} />
           </form>
           {/* All or Unread: the design system's segmented control, still as links. */}
           <nav aria-label="Conversation views" className="grid grid-cols-2 gap-0.5 rounded-[0.625rem] bg-surface3 p-[0.1875rem]">
