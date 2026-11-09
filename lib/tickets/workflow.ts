@@ -121,6 +121,8 @@ type Rule = {
   back?: boolean;
   /** What to write in the note, when the target status's usual hint doesn't fit. */
   hint?: string;
+  /** Not a button of its own: a reason chosen inside this other move's dialog (Not a bug, inside Won't fix). */
+  within?: TicketStatus;
 };
 
 const WORKING: readonly TicketStatus[] = ["NEW", "IN_PROGRESS", "REOPENED"];
@@ -130,22 +132,24 @@ const RULES: Rule[] = [
   { from: ["NEW", "REOPENED"], to: "IN_PROGRESS", label: "Start work", who: devSide },
   { from: ["NEED_INFO"], to: "IN_PROGRESS", label: "Info added, resume", who: (t, u) => reporter(t, u) || devSide(t, u) },
   { from: WORKING, to: "FIXED", label: "Mark fixed", who: devSide },
-  { from: ["FIXED"], to: "VERIFIED", label: "Mark as verified", who: qaSide },
-  { from: ["VERIFIED"], to: "CLOSED", label: "Close", who: qaSide },
+  // Retesting passed: one step. (Verified on its own is gone; tickets already Verified close the same way.)
+  { from: ["FIXED", "VERIFIED"], to: "CLOSED", label: "Verify and close", who: qaSide },
   { from: WORKING, to: "NEED_INFO", label: "Ask for info", who: devSide, needsNote: true },
   { from: ["FIXED", "VERIFIED", "CLOSED", "REJECTED", "DUPLICATE", "WONT_FIX"], to: "REOPENED", label: "Reopen", who: qaSide, needsNote: true },
   { from: [...WORKING, "NEED_INFO"], to: "DUPLICATE", label: "Duplicate", who: (t, u) => devSide(t, u) || qaSide(t, u), needsDuplicate: true },
+  // Won't fix asks why: it can't be fixed (Won't fix), it isn't a bug (Rejected), or another developer should take it
+  // (handBack in the store, which isn't a status move).
   { from: [...WORKING, "NEED_INFO"], to: "WONT_FIX", label: "Won't fix", who: devSide, needsNote: true },
-  { from: [...WORKING, "NEED_INFO"], to: "REJECTED", label: "Reject", who: devSide, needsNote: true },
+  { from: [...WORKING, "NEED_INFO"], to: "REJECTED", label: "Not a bug", who: devSide, needsNote: true, within: "WONT_FIX" },
   { from: ["NEW", "NEED_INFO"], to: "CLOSED", label: "Withdraw", who: reporter, needsNote: true, hint: "Why you're withdrawing it." },
   // Back a step, for a move made by mistake. Each asks why, so the other side knows what happened.
   { from: ["IN_PROGRESS"], to: "NEW", label: "Stop work", who: devSide, needsNote: true, back: true, hint: "Why it goes back to To do, e.g. started the wrong ticket." },
   { from: ["FIXED"], to: "IN_PROGRESS", label: "Not fixed yet", who: devSide, needsNote: true, back: true, hint: "What still needs work, so QA doesn't retest yet." },
-  { from: ["VERIFIED"], to: "FIXED", label: "Undo verify", who: qaSide, needsNote: true, back: true, hint: "Why it isn't verified after all." },
   { from: ["REJECTED", "WONT_FIX", "DUPLICATE"], to: "IN_PROGRESS", label: "Take back", who: devSide, needsNote: true, back: true, hint: "Why you're working on it after all." },
 ];
 
-export type Transition = { to: TicketStatus; label: string; needsNote: boolean; needsDuplicate: boolean; back: boolean; hint?: string };
+/** `within`: chosen inside that move's dialog rather than offered as its own button (see Rule). */
+export type Transition = { to: TicketStatus; label: string; needsNote: boolean; needsDuplicate: boolean; back: boolean; hint?: string; within?: TicketStatus };
 
 /** The moves `user` may make on this ticket now, one per target status. */
 export function allowedTransitions(t: TicketRef, u: Actor): Transition[] {
@@ -154,7 +158,15 @@ export function allowedTransitions(t: TicketRef, u: Actor): Transition[] {
   for (const r of RULES) {
     if (seen.has(r.to) || !r.from.includes(t.status) || !r.who(t, u)) continue;
     seen.add(r.to);
-    out.push({ to: r.to, label: r.label, needsNote: !!r.needsNote, needsDuplicate: !!r.needsDuplicate, back: !!r.back, ...(r.hint ? { hint: r.hint } : {}) });
+    out.push({
+      to: r.to,
+      label: r.label,
+      needsNote: !!r.needsNote,
+      needsDuplicate: !!r.needsDuplicate,
+      back: !!r.back,
+      ...(r.hint ? { hint: r.hint } : {}),
+      ...(r.within ? { within: r.within } : {}),
+    });
   }
   return out;
 }
@@ -176,4 +188,10 @@ export const canAssign = (u: Actor) => can(u, "tickets.assign");
 /** Assigning this ticket: the QA tester who filed it, or an admin. Another tester only reads it from the All tab. */
 export const canAssignTicket = (t: TicketRef, u: Actor) => canAssign(u) && reporter(t, u);
 /** Correcting the category: the assigned developer once they've identified the problem, or an admin. */
+/**
+ * Handing a ticket back (Won't fix → "Another developer should take it"): the assigned developer, or an admin, while
+ * it is still being worked on. It goes back to QA unassigned, with who they recommend.
+ */
+export const canHandBack = (t: TicketRef, u: Actor) => !!t.assigneeId && ([...WORKING, "NEED_INFO"] as TicketStatus[]).includes(t.status) && devSide(t, u);
+
 export const canCategorize = (t: TicketRef, u: Actor) => can(u, "tickets.categorize") && (u.role === "ADMIN" || t.assigneeId === u.id);

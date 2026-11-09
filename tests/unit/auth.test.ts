@@ -78,6 +78,16 @@ describe("permissions", () => {
     }
   });
 
+  it("lets the Team Lead tick-box manage Team & modules on top of any role, but never Users", () => {
+    for (const role of ROLES) {
+      expect(can({ role, teamLead: true }, "areas.manage")).toBe(true);
+      expect(can({ role, teamLead: true }, "users.manage")).toBe(role === "ADMIN");
+      for (const a of ACTIONS.filter((x) => x !== "areas.manage")) expect(can({ role, teamLead: true }, a)).toBe(can({ role }, a));
+    }
+    expect(can({ role: "QA", teamLead: false }, "areas.manage")).toBe(false);
+    expect(can({ role: "DEV" }, "areas.manage")).toBe(false);
+  });
+
   it("covers every action in the matrix", () => {
     expect([...ACTIONS].sort()).toEqual(Object.keys(expected).sort());
   });

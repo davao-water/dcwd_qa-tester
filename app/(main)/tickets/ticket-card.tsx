@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { areaPath } from "@/lib/areas/tree";
+import { areaPath, type AreaWithParents } from "@/lib/areas/tree";
 import { dayGroup, shortAgo } from "@/lib/format";
 import type { TicketStatus, TicketType } from "@/lib/tickets/workflow";
 import { CATEGORY_LABELS, NO_CATEGORY, type TicketCategoryValue } from "@/lib/tickets/workflow";
@@ -16,7 +16,7 @@ export type PhoneTicket = {
   title: string;
   status: TicketStatus;
   lastActivityAt: Date;
-  area: { name: string; parent?: { name: string } | null } | null;
+  area: AreaWithParents | null;
   /** Left out where a list has no category to show, such as the Dashboard for now. */
   category?: TicketCategoryValue | null;
   person: string;

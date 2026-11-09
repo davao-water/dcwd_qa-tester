@@ -21,6 +21,7 @@ import { ticketStore } from "@/lib/tickets/store";
 import {
   allowedTransitions,
   canAssignTicket,
+  canHandBack,
   canCategorize,
   CATEGORY_LABELS,
   NO_CATEGORY,
@@ -72,7 +73,9 @@ export async function TicketView({ params, mode }: { params: Promise<{ number: s
   const deletable = canDeleteTicket(t, me);
   const log = buildActivityLog(t);
   const assignable = canAssignTicket(t, me) && !isDone(t.status);
-  const options = editable || assignable ? await ticketFormOptions() : null;
+  // Won't fix can hand the ticket back to QA with a recommended developer, so that person needs the list too.
+  const handsBack = canHandBack(t, me);
+  const options = editable || assignable || handsBack ? await ticketFormOptions() : null;
   const now = new Date();
 
   const header = (
@@ -115,7 +118,12 @@ export async function TicketView({ params, mode }: { params: Promise<{ number: s
         </div>
         {/* The moves this person can make, then Edit and Delete behind ⋯ More (D21). */}
         <div className="flex flex-wrap items-center gap-2">
-          <StatusMoves ticket={ref} status={t.status} moves={moves} />
+          <StatusMoves
+            ticket={ref}
+            status={t.status}
+            moves={moves}
+            handBack={handsBack && options ? { developers: options.people.filter((p) => p.id !== t.assigneeId).map((p) => ({ id: p.id, name: p.name })) } : null}
+          />
           <TicketMoreMenu
             edit={
               editable && options

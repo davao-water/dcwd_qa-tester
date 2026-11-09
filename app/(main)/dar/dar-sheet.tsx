@@ -6,6 +6,7 @@ import type { DarCells } from "@/lib/dar/autofill";
 import { longDate, periodLabel } from "@/lib/dar/period";
 import type { DarReportData } from "@/lib/dar/store";
 import { dutyLayout, type DarFunction } from "@/lib/dar/template";
+import { DAY_STATUS_LABELS, PICKABLE_STATUSES, type DarDays, type DayStatus } from "@/lib/dar/attendance";
 import { CELL_MAX } from "@/lib/dar/autofill";
 import { cn } from "@/lib/utils";
 
@@ -19,12 +20,24 @@ const ORANGE = "bg-[#ffcc99]";
 const CORE_HEAD = "bg-[#fbd4b4]";
 const CELL = "border border-black px-1 py-0.5";
 const FONT = { fontFamily: 'Calibri, Carlito, "Segoe UI", Arial, sans-serif' };
+/** A soft fill per day status, readable on the white sheet in every theme. */
+const STATUS_FILL: Record<DayStatus, string> = {
+  PRESENT: "bg-[#e3f4ea]",
+  REMOTE: "bg-[#e5eefc]",
+  REST: "bg-[#f1f1f1]",
+  HOLIDAY: "bg-[#f1f1f1]",
+  LEAVE: "bg-[#fdf1d8]",
+  ABSENT: "bg-[#fbe2e0]",
+  UPCOMING: "bg-white",
+};
 
 export function DarSheet({
   report,
   cells,
   dateSubmitted,
   daysAttended,
+  status,
+  onStatus,
   onCell,
   onDateSubmitted,
 }: {
@@ -32,6 +45,9 @@ export function DarSheet({
   cells: DarCells;
   dateSubmitted: string;
   daysAttended: number;
+  /** Each day's status, picked under its date (on screen only: the paper form has no row for it). */
+  status: DarDays;
+  onStatus: (date: string, status: DayStatus) => void;
   onCell: (section: keyof DarCells, row: number, day: number, value: string) => void;
   onDateSubmitted: (date: string) => void;
 }) {
@@ -155,6 +171,38 @@ export function DarSheet({
                   {i + 1}
                 </th>
               ))}
+            </tr>
+            {/* Each day's status and logged times: for Days Attended, not part of the paper form. */}
+            <tr className="print:hidden">
+              <th colSpan={3} className={cn(CELL, "bg-[#f4f5f8] px-2 text-right text-[10px] font-semibold text-[#555]")}>
+                Day status · time in–out
+              </th>
+              {report.days.map((d) => {
+                const day = status[d.date] ?? { status: "PRESENT" as DayStatus };
+                return (
+                  <th key={d.date} className={cn(CELL, "p-0.5 align-top font-normal", STATUS_FILL[day.status])}>
+                    <select
+                      aria-label={`Status of ${d.month} ${d.day}`}
+                      value={day.status}
+                      onChange={(e) => onStatus(d.date, e.target.value as DayStatus)}
+                      className="w-full cursor-pointer rounded-sm bg-transparent text-center text-[9.5px] font-semibold text-black outline-none focus-visible:ring-2 focus-visible:ring-[#f4a46a]"
+                    >
+                      {[...PICKABLE_STATUSES, ...(day.status === "UPCOMING" ? (["UPCOMING"] as const) : [])].map((s) => (
+                        <option key={s} value={s}>
+                          {s === "REMOTE" ? "Remote" : DAY_STATUS_LABELS[s]}
+                        </option>
+                      ))}
+                    </select>
+                    {day.in || day.out ? (
+                      <span className="mt-0.5 block text-[8.5px] leading-tight text-[#444]" title={day.where}>
+                        {day.in ?? "—"}
+                        <br />
+                        {day.out ?? "—"}
+                      </span>
+                    ) : null}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

@@ -65,18 +65,24 @@ export async function saveAreaMembers(_prev: FormState, fd: FormData): Promise<F
     areaId: text(fd, "areaId"),
     members: fd.getAll("member").filter((v): v is string => typeof v === "string"),
     lead: text(fd, "lead"),
+    designers: fd.getAll("designer").filter((v): v is string => typeof v === "string"),
   });
   if (!parsed.success) return fromZodError(parsed.error);
-  const { areaId, members, lead } = parsed.data;
+  const { areaId, members, lead, designers } = parsed.data;
 
-  const users = await db.user.findMany({ where: { id: { in: members } }, select: { id: true, role: true } });
+  const users = await db.user.findMany({ where: { id: { in: members } }, select: { id: true, role: true, designer: true } });
   if (users.length !== new Set(members).size) return { ok: false, message: "Someone in the list no longer exists. Refresh the page." };
   if (lead && users.find((u) => u.id === lead)?.role === "QA") return { ok: false, message: "The lead must be a developer or an admin." };
+  if (designers.some((d) => !users.find((u) => u.id === d)?.designer)) {
+    return { ok: false, message: "Only people with the Designer tick-box (Users) can work on a module as its UI/UX designer." };
+  }
 
   try {
     await db.$transaction([
       db.areaMember.deleteMany({ where: { areaId } }),
-      db.areaMember.createMany({ data: [...new Set(members)].map((userId) => ({ areaId, userId, isLead: userId === lead })) }),
+      db.areaMember.createMany({
+        data: [...new Set(members)].map((userId) => ({ areaId, userId, isLead: userId === lead, asDesigner: designers.includes(userId) })),
+      }),
     ]);
   } catch (e) {
     return fromDbError(e);

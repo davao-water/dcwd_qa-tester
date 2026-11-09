@@ -19,7 +19,9 @@ const MATRIX = {
   "tickets.verify": ["ADMIN", "QA"],
   /** Correcting a ticket's category after filing: admins, and the assigned developer (canCategorize in lib/tickets/workflow.ts). */
   "tickets.categorize": ["ADMIN", "DEV"],
+  /** Team & modules: modules at every level and their members. Admins, and anyone with the Team Lead tick-box (FLAG_GRANTS). */
   "areas.manage": ["ADMIN"],
+  /** Users (accounts, roles, sign-ups, passwords) stays admin-only: no tick-box grants it. */
   "users.manage": ["ADMIN"],
   "projects.manage": ["ADMIN"],
   "workspace.manage": ["ADMIN"],
@@ -35,12 +37,12 @@ export type Action = keyof typeof MATRIX;
 export const ACTIONS = Object.keys(MATRIX) as Action[];
 
 /** Ticked on the account in Admin → Users, on top of the role. */
-type Flag = "designer";
+type Flag = "designer" | "teamLead";
 
 /** Actions an account's tick-box grants whatever its role. */
-const FLAG_GRANTS: Partial<Record<Action, Flag>> = { "designs.create": "designer" };
+const FLAG_GRANTS: Partial<Record<Action, Flag>> = { "designs.create": "designer", "areas.manage": "teamLead" };
 
-export function can(user: { role: Role; designer?: boolean } | null | undefined, action: Action): boolean {
+export function can(user: { role: Role; designer?: boolean; teamLead?: boolean } | null | undefined, action: Action): boolean {
   if (!user) return false;
   const flag = FLAG_GRANTS[action];
   return (MATRIX[action] as readonly Role[]).includes(user.role) || (!!flag && user[flag] === true);

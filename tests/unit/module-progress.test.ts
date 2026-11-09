@@ -51,6 +51,13 @@ describe("module progress", () => {
     expect(c.untagged).toBe(2);
   });
 
+  it("rolls a third level up into its top-level module, and keeps people's modules through it", () => {
+    const deep: ProgressArea[] = [...areas, { id: "upload", name: "Reading Upload", parentId: "meter", active: true }];
+    const c = moduleProgress(deep, [tk({ areaId: "upload", category: "UI_UX" })]).find((x) => x.id === "bill")!;
+    expect(c.categories.UI_UX).toEqual({ done: 0, total: 1, pct: 0 });
+    expect(memberModules(deep, ["upload"])).toEqual(new Set(["bill"]));
+  });
+
   it("rolls sub-modules up into their module, and shows untagged tickets apart", () => {
     const c = card([tk({ areaId: "meter", category: "BACK_END" }), tk({ category: null }), tk({ areaId: "meter", category: null })]);
     expect(c.categories.BACK_END).toEqual({ done: 0, total: 1, pct: 0 });

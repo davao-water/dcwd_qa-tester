@@ -14,16 +14,16 @@ function layout(status: TicketStatus, who: Actor) {
 
 describe("moveLayout for the assigned developer", () => {
   it("starts work on a new or reopened ticket, with the other outcomes in More", () => {
-    expect(layout("NEW", dev)).toEqual({ main: "Start work", second: null, outcomes: ["Mark fixed", "Ask for info", "Duplicate", "Won't fix", "Reject"], undo: [] });
+    expect(layout("NEW", dev)).toEqual({ main: "Start work", second: null, outcomes: ["Mark fixed", "Ask for info", "Duplicate", "Won't fix"], undo: [] });
     expect(layout("REOPENED", dev).main).toBe("Start work");
   });
 
   it("marks fixed while working, with Stop work as an undo", () => {
-    expect(layout("IN_PROGRESS", dev)).toEqual({ main: "Mark fixed", second: null, outcomes: ["Ask for info", "Duplicate", "Won't fix", "Reject"], undo: ["Stop work"] });
+    expect(layout("IN_PROGRESS", dev)).toEqual({ main: "Mark fixed", second: null, outcomes: ["Ask for info", "Duplicate", "Won't fix"], undo: ["Stop work"] });
   });
 
   it("resumes once info is added", () => {
-    expect(layout("NEED_INFO", dev)).toEqual({ main: "Info added, resume", second: null, outcomes: ["Duplicate", "Won't fix", "Reject"], undo: [] });
+    expect(layout("NEED_INFO", dev)).toEqual({ main: "Info added, resume", second: null, outcomes: ["Duplicate", "Won't fix"], undo: [] });
   });
 
   it("has only an undo once it's fixed or ended", () => {
@@ -42,12 +42,12 @@ describe("moveLayout for the QA tester who filed it", () => {
     expect(layout("NEED_INFO", qa)).toEqual({ main: "Info added, resume", second: null, outcomes: ["Duplicate", "Withdraw"], undo: [] });
   });
 
-  it("verifies a fix with Reopen beside it", () => {
-    expect(layout("FIXED", qa)).toEqual({ main: "Mark as verified", second: "Reopen", outcomes: [], undo: [] });
+  it("verifies and closes a fix in one move, with Reopen beside it", () => {
+    expect(layout("FIXED", qa)).toEqual({ main: "Verify and close", second: "Reopen", outcomes: [], undo: [] });
   });
 
-  it("closes a verified ticket, with Reopen and Undo verify in More", () => {
-    expect(layout("VERIFIED", qa)).toEqual({ main: "Close", second: null, outcomes: ["Reopen"], undo: ["Undo verify"] });
+  it("closes a ticket already Verified the same way, with no Undo verify", () => {
+    expect(layout("VERIFIED", qa)).toEqual({ main: "Verify and close", second: "Reopen", outcomes: [], undo: [] });
   });
 
   it("can only reopen a finished ticket, as its one button", () => {
@@ -59,15 +59,17 @@ describe("moveLayout for an admin", () => {
   it("gets the main move of whoever's turn it is, and everything else in More", () => {
     expect(layout("NEW", admin).main).toBe("Start work");
     expect(layout("NEW", admin).outcomes).toContain("Withdraw");
-    expect(layout("FIXED", admin)).toMatchObject({ main: "Mark as verified", second: "Reopen", undo: ["Not fixed yet"] });
+    expect(layout("FIXED", admin)).toMatchObject({ main: "Verify and close", second: "Reopen", undo: ["Not fixed yet"] });
     expect(layout("REJECTED", admin)).toEqual({ main: null, second: "Reopen", outcomes: [], undo: ["Take back"] });
   });
 });
 
 describe("move colours", () => {
-  it("marks Reopen and Reject red, and never makes an undo the main move", () => {
+  it("marks Reopen and Not a bug red, keeps Not a bug out of the buttons, and never makes an undo the main move", () => {
     const moves = allowedTransitions({ status: "IN_PROGRESS", reporterId: "qa1", assigneeId: "dev1" }, dev);
-    expect(moves.filter(isRedMove).map((m) => m.label)).toEqual(["Reject"]);
+    expect(moves.filter(isRedMove).map((m) => m.label)).toEqual(["Not a bug"]);
+    const l = moveLayout(moves);
+    expect([l.main, l.second, ...l.outcomes, ...l.undo].some((m) => m?.label === "Not a bug")).toBe(false);
     for (const s of ["IN_PROGRESS", "FIXED", "VERIFIED", "REJECTED"] as const) {
       for (const who of [dev, qa, admin]) expect(moveLayout(allowedTransitions({ status: s, reporterId: "qa1", assigneeId: "dev1" }, who)).main?.back ?? false).toBe(false);
     }

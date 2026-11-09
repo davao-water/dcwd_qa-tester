@@ -1,3 +1,4 @@
+import { AREA_PATH_SELECT, areaPath, rootName } from "@/lib/areas/tree";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -74,15 +75,16 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
         email: true,
         role: true,
         designer: true,
+        teamLead: true,
         active: true,
         mustChangePassword: true,
-        areas: { select: { isLead: true, area: { select: { name: true, parent: { select: { name: true } } } } } },
+        areas: { select: { isLead: true, area: { select: AREA_PATH_SELECT } } },
       },
     }),
   ]);
 
   // A sub-module counts for its top-level module in the Module filter.
-  const withModules = users.map((u) => ({ ...u, modules: [...new Set(u.areas.map((a) => a.area.parent?.name ?? a.area.name))] }));
+  const withModules = users.map((u) => ({ ...u, modules: [...new Set(u.areas.map((a) => rootName(a.area)))] }));
   const shown = filterUsers(withModules, f);
   const moduleNames = [...new Set(withModules.flatMap((u) => u.modules))].sort((a, b) => a.localeCompare(b));
   const counts: Record<Tab, number> = { users: users.length, approval: requests.length, reset: resets.length };
@@ -220,11 +222,12 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                             <span className="flex flex-wrap gap-1">
                               <StatusPill tone="neutral">{ROLE_LABELS[u.role as Role]}</StatusPill>
                               {u.designer ? <StatusPill tone="neutral">Designer</StatusPill> : null}
+                              {u.teamLead ? <StatusPill tone="acc">Team Lead</StatusPill> : null}
                             </span>
                           </td>
                           <td className={cn(cell, "text-[0.8438rem] text-body2")}>
                             {u.areas.length ? (
-                              u.areas.map((a) => `${a.area.parent ? `${a.area.parent.name} › ` : ""}${a.area.name}${a.isLead ? " (lead)" : ""}`).join(", ")
+                              u.areas.map((a) => `${areaPath(a.area)}${a.isLead ? " (lead)" : ""}`).join(", ")
                             ) : (
                               <span className="text-muted-foreground">None</span>
                             )}
@@ -234,7 +237,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                           </td>
                           <td className={cell}>
                             <div className="flex justify-end gap-0.5">
-                              <UserDialog user={{ id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, active: u.active }} isSelf={u.id === me.id} />
+                              <UserDialog user={{ id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, teamLead: u.teamLead, active: u.active }} isSelf={u.id === me.id} />
                               {u.id !== me.id ? <ResetPasswordButton id={u.id} name={u.name} /> : null}
                               {u.id !== me.id ? <SignOutDevicesButton id={u.id} name={u.name} /> : null}
                               {u.id !== me.id ? <DeleteUserDialog user={{ id: u.id, name: u.name, email: u.email }} /> : null}

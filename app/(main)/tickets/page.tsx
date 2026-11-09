@@ -656,6 +656,7 @@ async function TicketList({
             inView: columnInView(c.key, f),
           }))}
           assign={canAssign(me) ? { areas, people } : null}
+          developers={people.map((p) => ({ id: p.id, name: p.name }))}
         />
       ) : (
         <>
@@ -938,7 +939,6 @@ const MORE: Record<BoardColumnKey, { group: string; status: string | null }> = {
   doing: { group: "open", status: "IN_PROGRESS" },
   info: { group: "open", status: "NEED_INFO" },
   fixed: { group: "open", status: "FIXED" },
-  verified: { group: "open", status: "VERIFIED" },
   done: { group: "done", status: null },
 };
 

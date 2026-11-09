@@ -3,6 +3,7 @@ import {
   allowedTransitions,
   canAssign,
   canAssignTicket,
+  canHandBack,
   canReadTicket,
   canDeleteTicket,
   canEditTicket,
@@ -42,9 +43,11 @@ describe("ticket workflow", () => {
     expect(moves(ticket("NEW", null), dev)).toEqual([]);
   });
 
-  it("lets the QA tester who filed it verify, close and reopen, but not fix", () => {
-    expect(moves(ticket("FIXED"), qa)).toEqual(["VERIFIED", "REOPENED"]);
-    expect(moves(ticket("VERIFIED"), qa)).toEqual(["CLOSED", "REOPENED", "FIXED"]);
+  it("lets the QA tester who filed it verify and close in one move, or reopen, but not fix", () => {
+    expect(moves(ticket("FIXED"), qa)).toEqual(["CLOSED", "REOPENED"]);
+    expect(allowedTransitions(ticket("FIXED"), qa)[0].label).toBe("Verify and close");
+    // A ticket already Verified (before Verified stopped being a step) closes the same way; Undo verify is gone.
+    expect(moves(ticket("VERIFIED"), qa)).toEqual(["CLOSED", "REOPENED"]);
     for (const s of ["CLOSED", "REJECTED", "DUPLICATE", "WONT_FIX"] as const) expect(moves(ticket(s), qa)).toEqual(["REOPENED"]);
     expect(moves(ticket("IN_PROGRESS"), qa)).toEqual(["DUPLICATE"]);
   });
@@ -72,14 +75,30 @@ describe("ticket workflow", () => {
 
   it("lets an admin do both sides", () => {
     expect(moves(ticket("NEW", "dev1"), admin)).toEqual(expect.arrayContaining(["IN_PROGRESS", "FIXED", "CLOSED"]));
-    expect(moves(ticket("FIXED"), admin)).toEqual(["VERIFIED", "REOPENED", "IN_PROGRESS"]);
+    expect(moves(ticket("FIXED"), admin)).toEqual(["CLOSED", "REOPENED", "IN_PROGRESS"]);
+  });
+
+  it("offers Not a bug inside Won't fix, not as its own button, and lets the assigned developer hand a ticket back", () => {
+    const wontFix = allowedTransitions(ticket("IN_PROGRESS"), dev).filter((m) => m.to === "WONT_FIX" || m.to === "REJECTED");
+    expect(wontFix.map((m) => [m.to, m.label, m.within ?? null])).toEqual([
+      ["WONT_FIX", "Won't fix", null],
+      ["REJECTED", "Not a bug", "WONT_FIX"],
+    ]);
+    // Still a real move on the server, so a "Not a bug" chosen inside Won't fix is accepted.
+    expect(transitionError(ticket("IN_PROGRESS"), dev, { to: "REJECTED", note: "Works as the business rule says" })).toBeNull();
+    for (const s of ["NEW", "IN_PROGRESS", "REOPENED", "NEED_INFO"] as const) expect(canHandBack(ticket(s), dev)).toBe(true);
+    for (const s of ["FIXED", "VERIFIED", "CLOSED", "WONT_FIX"] as const) expect(canHandBack(ticket(s), dev)).toBe(false);
+    expect(canHandBack(ticket("IN_PROGRESS"), otherDev)).toBe(false);
+    expect(canHandBack(ticket("IN_PROGRESS"), qa)).toBe(false);
+    expect(canHandBack(ticket("IN_PROGRESS"), admin)).toBe(true);
+    expect(canHandBack(ticket("IN_PROGRESS", null), admin)).toBe(false); // nobody to hand it back from
   });
 
   it("lets a move made by mistake be taken back a step, with a note", () => {
     const back = (s: TicketStatus, u: Actor) => allowedTransitions(ticket(s), u).filter((m) => m.back).map((m) => `${m.label} → ${m.to}`);
     expect(back("IN_PROGRESS", dev)).toEqual(["Stop work → NEW"]);
     expect(back("FIXED", dev)).toEqual(["Not fixed yet → IN_PROGRESS"]);
-    expect(back("VERIFIED", qa)).toEqual(["Undo verify → FIXED"]);
+    expect(back("VERIFIED", qa)).toEqual([]);
     for (const s of ["REJECTED", "WONT_FIX", "DUPLICATE"] as const) expect(back(s, dev)).toEqual(["Take back → IN_PROGRESS"]);
     // Only the side that made the move (or an admin), and never once the other side has moved on.
     expect(back("IN_PROGRESS", qa)).toEqual([]);
@@ -87,7 +106,7 @@ describe("ticket workflow", () => {
     expect(back("FIXED", qa)).toEqual([]);
     expect(back("CLOSED", dev)).toEqual([]);
     expect(back("IN_PROGRESS", otherDev)).toEqual([]);
-    expect(back("VERIFIED", admin)).toEqual(["Undo verify → FIXED"]);
+    expect(back("VERIFIED", admin)).toEqual([]);
     expect(transitionError(ticket("IN_PROGRESS"), dev, { to: "NEW" })).toBe("Add a note explaining why.");
     expect(transitionError(ticket("IN_PROGRESS"), dev, { to: "NEW", note: "Started the wrong ticket" })).toBeNull();
     // A move back is never the main button, and says what to write.

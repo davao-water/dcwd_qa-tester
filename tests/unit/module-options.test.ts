@@ -7,6 +7,13 @@ const areas = [
 ];
 
 describe("moduleOptions", () => {
+  it("lists a third level under its sub-module, named by its whole path", () => {
+    const deep = [{ id: "pr", name: "Procurement", children: [{ id: "req", name: "Purchase Requisition", children: [{ id: "ap", name: "Approval", children: [] }] }, { id: "dash", name: "Dashboard", children: [] }] }];
+    const [proc] = moduleOptions(deep, "whole module");
+    expect(proc.options.map((o) => `${o.tree.level}:${o.tree.name}`)).toEqual(["0:Procurement", "1:Purchase Requisition", "2:Approval", "1:Dashboard"]);
+    expect(proc.options[2].label).toBe("Procurement › Purchase Requisition › Approval");
+  });
+
   it("lists each module with its sub-modules under it, in order", () => {
     const groups = moduleOptions(areas, "whole module");
     expect(groups.map((g) => g.options.map((o) => `${o.tree.level}:${o.tree.name}`))).toEqual([["0:Billing", "1:Posting", "1:Collection"], ["0:Meter Reading"]]);

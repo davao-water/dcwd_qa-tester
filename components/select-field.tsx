@@ -15,7 +15,7 @@ export type SelectOption = {
   label: string;
   dot?: string;
   /** A row of a parent-and-children list (lib/areas/tree.ts moduleOptions): the name in the open list, with `label` as its full name for screen readers. */
-  tree?: { name: string; level: 0 | 1; note?: string };
+  tree?: { name: string; level: 0 | 1 | 2; note?: string };
 };
 /** `rule`: a line above the group, separating one parent and its children from the next. */
 export type SelectOptionGroup = { label?: string; rule?: boolean; options: SelectOption[] };
@@ -46,12 +46,15 @@ function Option({ option: o }: { option: SelectOption }) {
       </SelectItem>
     );
   }
+  // A sub-module hangs off its module's line; one level further in, off its sub-module's line too.
+  const deep = o.tree.level === 2;
   return (
     <SelectItem value={o.value} aria-label={o.label}>
       {/* The branch joining this child to its parent above. */}
       <span aria-hidden className="absolute inset-y-0 left-4 w-px bg-input" />
-      <span aria-hidden className="absolute top-1/2 left-4 h-px w-2.5 bg-input" />
-      <span className="truncate pl-5">{o.tree.name}</span>
+      {deep ? <span aria-hidden className="absolute inset-y-0 left-8 w-px bg-input" /> : null}
+      <span aria-hidden className={cn("absolute top-1/2 h-px w-2.5 bg-input", deep ? "left-8" : "left-4")} />
+      <span className={cn("truncate", deep ? "pl-9" : "pl-5")}>{o.tree.name}</span>
     </SelectItem>
   );
 }

@@ -61,6 +61,8 @@ model User {
   role               UserRole
   /// Can send UI/UX designs for approval (Design reviews), on top of their role.
   designer           Boolean            @default(false)
+  /// Can manage Team & modules (modules, sub-modules and their members), on top of their role. Users stays admin-only.
+  teamLead           Boolean            @default(false)
   active             Boolean            @default(true)
   /// Signed up on the sign-in page and waiting for an admin. Pending accounts are also inactive, so they can't sign in.
   pending            Boolean            @default(false)
@@ -151,12 +153,14 @@ model ErpArea {
 }
 
 model AreaMember {
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  areaId    String
-  area      ErpArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
-  isLead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId     String
+  area       ErpArea  @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  isLead     Boolean  @default(false)
+  /// Works on this module as its UI/UX designer, listed under UI/UX. Only for people with the Designer tick-box.
+  asDesigner Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@id([userId, areaId])
   @@index([areaId])
@@ -352,6 +356,8 @@ model DarReport {
   periodEnd     String
   cells         Json // { core: string[][], support: string[][] }, one string per day per function row
   dateSubmitted String? // "2026-10-31"
+  days          Json? // { "2026-11-03": { status, in?, out?, where? } }: Present, Rest day, Leave… (lib/dar/attendance.ts)
+  autoCells     Json? // what QA Hub last wrote in each cell from ticket work, so a refill replaces it instead of adding it twice
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

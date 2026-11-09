@@ -7,7 +7,7 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { moduleOptions } from "@/lib/areas/tree";
+import { moduleOptions, pathTo } from "@/lib/areas/tree";
 import { ROLE_LABELS, type Role } from "@/lib/auth/permissions";
 import { initialFormState, type FormState } from "@/lib/form";
 import { takeSharedFiles } from "@/lib/tickets/shared-files";
@@ -21,7 +21,8 @@ import { levelDot, TYPE_ICON, TypeTile, typeStyle } from "./ticket-bits";
 import { useImageAttachments } from "./image-picker";
 import { useVideoUpload } from "./video-picker";
 
-export type AreaOption = { id: string; name: string; children: { id: string; name: string }[] };
+/** A module with what's inside it, at every level (lib/areas/tree.ts). */
+export type AreaOption = { id: string; name: string; children: AreaOption[] };
 /** A developer or admin, with the areas they belong to, so the picker can suggest the right people. */
 export type AssigneeOption = { id: string; name: string; role: Role; areaIds: string[]; leadAreaIds: string[] };
 
@@ -99,7 +100,7 @@ export function AreaSelect({ areas, value, onChange, emptyLabel, invalid, id = "
   );
 }
 
-/** Developers in the chosen area (and its module) first, with the lead marked; everyone else after. */
+/** Developers in the chosen area (or any module it sits inside) first, with the lead marked; everyone else after. */
 export function AssigneeSelect({
   areas,
   people,
@@ -115,8 +116,7 @@ export function AssigneeSelect({
   id?: string;
   onValueChange?: (assigneeId: string) => void;
 }) {
-  const parent = areas.find((m) => m.id === areaId || m.children.some((c) => c.id === areaId));
-  const scope = areaId ? [areaId, ...(parent && parent.id !== areaId ? [parent.id] : [])] : [];
+  const scope = areaId ? pathTo(areas, areaId).map((a) => a.id) : [];
   const inArea = people
     .filter((p) => p.areaIds.some((a) => scope.includes(a)))
     .sort((a, b) => Number(b.leadAreaIds.some((x) => scope.includes(x))) - Number(a.leadAreaIds.some((x) => scope.includes(x))));

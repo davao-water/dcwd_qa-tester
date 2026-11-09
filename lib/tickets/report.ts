@@ -1,3 +1,4 @@
+import { rootOf } from "@/lib/areas/tree";
 import { formatDateTime } from "@/lib/format";
 import { moduleProgress, progressTone, type ModuleProgress, type ProgressArea, type ProgressTicket } from "./progress";
 import { CATEGORY_LABELS, TICKET_CATEGORIES, type TicketStatus } from "./workflow";
@@ -9,8 +10,8 @@ export const REPORT_STAGES = [
   { key: "toStart", label: "Not started", statuses: ["NEW", "REOPENED"] },
   { key: "doing", label: "In progress", statuses: ["IN_PROGRESS"] },
   { key: "info", label: "Needs info", statuses: ["NEED_INFO"] },
-  { key: "fixed", label: "Fixed", statuses: ["FIXED"] },
-  { key: "verified", label: "Verified", statuses: ["VERIFIED"] },
+  // Tickets already Verified (no longer a step of its own) wait for QA to close, like Fixed ones.
+  { key: "fixed", label: "Fixed", statuses: ["FIXED", "VERIFIED"] },
   { key: "closed", label: "Closed", statuses: ["CLOSED"] },
   { key: "other", label: "Rejected, duplicate or won't fix", statuses: ["REJECTED", "DUPLICATE", "WONT_FIX"] },
 ] as const satisfies readonly { key: string; label: string; statuses: readonly TicketStatus[] }[];
@@ -28,7 +29,7 @@ export type ModuleReport = {
   overall: { done: number; total: number; pct: number };
 };
 
-const emptyStages = (): StageCounts => ({ toStart: 0, doing: 0, info: 0, fixed: 0, verified: 0, closed: 0, other: 0, total: 0 });
+const emptyStages = (): StageCounts => ({ toStart: 0, doing: 0, info: 0, fixed: 0, closed: 0, other: 0, total: 0 });
 
 const stageOf = (s: TicketStatus): StageKey => REPORT_STAGES.find((st) => (st.statuses as readonly TicketStatus[]).includes(s))!.key;
 
@@ -39,7 +40,7 @@ function add(c: StageCounts, s: TicketStatus) {
 
 export function moduleReport(areas: ProgressArea[], tickets: ProgressTicket[]): ModuleReport {
   const cards = moduleProgress(areas, tickets);
-  const topOf = new Map(areas.map((a) => [a.id, a.parentId ?? a.id]));
+  const topOf = new Map(areas.map((a) => [a.id, rootOf(areas, a.id)]));
   const stages = new Map(cards.map((c) => [c.id, emptyStages()]));
   const elsewhere = emptyStages();
   const all = emptyStages();

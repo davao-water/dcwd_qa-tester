@@ -117,6 +117,23 @@ export async function assignTicket(_prev: FormState, fd: FormData): Promise<Form
   return r;
 }
 
+/** Won't fix → "Another developer should take it": back to QA unassigned, with a recommendation. */
+export async function handBackTicket(_prev: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireAction("tickets.resolve");
+  const id = text(fd, "id");
+  const note = text(fd, "note").trim().slice(0, 5000);
+  if (!note) return { ok: false, message: "Add a note explaining why.", fieldErrors: { note: ["Add a note explaining why."] } };
+  let recommended: string | null = null;
+  const r = await run(async () => {
+    ({ recommended } = await tickets.handBack(me, id, { recommendId: text(fd, "recommendId") || null, note }));
+  });
+  if (r.ok) {
+    push(id, me.id, { kind: "handedBack", recommended, note });
+    refresh(Number(text(fd, "number")));
+  }
+  return r;
+}
+
 export async function moveTicket(_prev: FormState, fd: FormData): Promise<FormState> {
   const me = await requireUser();
   const parsed = transitionInput.safeParse({ to: text(fd, "to"), note: text(fd, "note"), duplicateOf: text(fd, "duplicateOf") });

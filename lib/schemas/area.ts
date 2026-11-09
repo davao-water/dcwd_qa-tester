@@ -27,5 +27,8 @@ export const areaMembersInput = z
     lead: z
       .string()
       .transform((v) => (v ? v : null)),
+    /** Members who work on this module as its UI/UX designer. */
+    designers: z.array(z.string().min(1)).max(200).default([]),
   })
-  .refine((v) => !v.lead || v.members.includes(v.lead), { message: "The lead must also be a member", path: ["lead"] });
+  .refine((v) => !v.lead || v.members.includes(v.lead), { message: "The lead must also be a member", path: ["lead"] })
+  .refine((v) => v.designers.every((d) => v.members.includes(d)), { message: "A UI/UX designer must also be a member", path: ["designers"] });

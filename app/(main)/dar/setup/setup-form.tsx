@@ -10,7 +10,7 @@ import { initialFormState } from "@/lib/form";
 import { cn } from "@/lib/utils";
 import { submitKeepingInput } from "../../tickets/ticket-form";
 import { saveDarProfile } from "../actions";
-import { FunctionsEditor } from "../functions-editor";
+import { FunctionsEditor, type DarAreaOption } from "../functions-editor";
 import { FirstPeriodField } from "./first-period-field";
 
 // The person's own DAR set-up, laid out like the old shared DAR template page. Empty fields stay empty on the report.
@@ -21,12 +21,15 @@ export function DarSetupForm({
   firstPeriodStart,
   scheme: initialScheme,
   today,
+  areas,
 }: {
   header: DarHeader;
   hasFullName: boolean;
   firstPeriodStart: string;
   scheme: PeriodScheme;
   today: string;
+  /** Modules (every level), for linking a row to the modules whose ticket work fills it. */
+  areas: DarAreaOption[];
 }) {
   const [state, action, pending] = useActionState(saveDarProfile, initialFormState);
   const [scheme, setScheme] = useState<PeriodScheme>(initialScheme);
@@ -82,8 +85,8 @@ export function DarSetupForm({
       </div>
 
       <FormSection>Duties and MFOs</FormSection>
-      <FunctionsEditor name="coreFunctions" label="A.) Core functions" initial={h.core} />
-      <FunctionsEditor name="supportFunctions" label="B.) Support functions" initial={h.support} />
+      <FunctionsEditor name="coreFunctions" label="A.) Core functions" initial={h.core} areas={areas} />
+      <FunctionsEditor name="supportFunctions" label="B.) Support functions" initial={h.support} areas={areas} />
       {err.coreFunctions || err.supportFunctions ? (
         <p className="text-[0.7813rem] font-medium text-destructive-text">Every row needs a duty, unless it is another MFO of the duty above.</p>
       ) : null}

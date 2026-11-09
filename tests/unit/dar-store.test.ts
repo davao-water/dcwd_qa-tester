@@ -73,16 +73,21 @@ describe("darStore", () => {
     const r = await s.load(ana, OCT);
     expect(r.saved).toBe(false);
     expect(r.days).toHaveLength(15);
-    expect(r.cells.core[0][0]).toBe("QA - BCA");
+    // One entry per ticket, in the order things happened.
+    expect(r.cells.core[0][0]).toBe("Filed #1 T");
     expect(r.cells.core[0][1]).toBe(NO_ENTRY); // Ben's ticket, not Ana's; a Friday, so "-"
-    expect(r.cells.core[0][4]).toBe("QA - HR-RSP");
+    expect(r.cells.core[0][4]).toBe("Replied on & verified #2 T");
     // Not an auto-fill row: each day's default, "-" on work days and REST DAY on the weekend (Oct 3 and 4).
     expect(r.cells.support[0].slice(0, 5)).toEqual([NO_ENTRY, NO_ENTRY, REST_DAY, REST_DAY, NO_ENTRY]);
-    expect(r.cells.support[1][0]).toBe("QA - BCA");
-    expect(r.daysAttended).toBe(2);
+    // Both fill rows of the old QA set-up have no modules, so both take the work.
+    expect(r.cells.support[1][0]).toBe("Filed #1 T");
+    // Days Attended counts the Present days: Oct 1–15 has 11 work days, all past by Oct 16.
+    expect(r.status["2026-10-03"].status).toBe("REST");
+    expect(r.status["2026-10-01"].status).toBe("PRESENT");
+    expect(r.daysAttended).toBe(11);
     expect(r.dateSubmitted).toBe("2026-10-16");
 
-    expect((await s.load(ben, OCT)).cells.core[0][1]).toBe("QA - HR-RSP");
+    expect((await s.load(ben, OCT)).cells.core[0][1]).toBe("Filed #2 T");
   });
 
   it("saves edits per person and keeps them apart", async () => {
@@ -90,22 +95,30 @@ describe("darStore", () => {
     const r = await s.load(ana, OCT);
     r.cells.core[0][2] = "HR201";
     r.cells.support[0][2] = "Encoding";
-    await s.save(ana, OCT, { ...r.cells, core: [[...r.cells.core[0], "too many"]] }, "2026-10-17");
+    const status = { ...r.status, "2026-10-02": { status: "LEAVE" as const } };
+    await s.save(ana, OCT, { cells: { ...r.cells, core: [[...r.cells.core[0], "too many"]] }, dateSubmitted: "2026-10-17", status, auto: r.auto });
 
     const again = await s.load(ana, OCT);
     expect(again.saved).toBe(true);
     expect(again.cells.core[0][2]).toBe("HR201");
     expect(again.cells.core[0]).toHaveLength(15);
     expect(again.dateSubmitted).toBe("2026-10-17");
-    expect(again.daysAttended).toBe(3);
+    expect(again.status["2026-10-02"].status).toBe("LEAVE");
+    expect(again.daysAttended).toBe(10);
+    // The saved entry isn't added a second time when the page loads again.
+    expect(again.cells.core[0][0]).toBe("Filed #1 T");
     expect((await s.load(ben, OCT)).saved).toBe(false);
     expect(await s.list(ana.id)).toHaveLength(1);
     expect(await s.list(ben.id)).toHaveLength(0);
 
-    // Refill replaces the auto-fill rows only.
+    // New ticket work merges into the saved cells next to what was typed, and replaces QA Hub's own earlier entry.
+    const two = await db.ticket.findFirstOrThrow({ where: { number: 2 } });
+    await db.ticketComment.create({ data: { ticketId: two.id, authorId: ana.id, body: "again", createdAt: day(1) } });
     const cells = await s.refill(ana, OCT);
-    expect(cells.core[0][2]).toBe(REST_DAY);
+    expect(cells.core[0][0]).toBe("Filed #1 T; replied on #2 T");
+    expect(cells.core[0][2]).toBe("HR201");
     expect(cells.support[0][2]).toBe("Encoding");
+    expect((await s.refill(ana, OCT)).core[0][0]).toBe("Filed #1 T; replied on #2 T");
   });
 
   it("starts a new account empty: no rows until they set up their DAR", async () => {
@@ -113,7 +126,8 @@ describe("darStore", () => {
     const r = await s.load(dev, OCT);
     expect(r.header).toMatchObject({ name: "Dan", position: "", department: "", unit: "", supervisor: "", core: [], support: [] });
     expect(r.cells).toEqual({ core: [], support: [] });
-    expect(r.daysAttended).toBe(0);
+    // Days Attended comes from the day statuses (every past work day starts Present), not from rows.
+    expect(r.daysAttended).toBe(11);
   });
 
   it("saves each person's own set-up, and fills a developer's days with DEV", async () => {
@@ -131,7 +145,8 @@ describe("darStore", () => {
     });
     const r = await s.load(dev, OCT);
     expect(r.header).toMatchObject({ name: "Dan R. Reyes", unit: "Systems Development Unit", supervisor: "Lead Dev", notedBy: { name: "", title: "" }, support: [] });
-    expect(r.cells.core[0][2]).toBe("DEV - BCA");
+    // A Saturday reply: after hours on a rest day.
+    expect(r.cells.core[0][2]).toBe("REST DAY · After hours: Replied on #1 T");
     expect(r.cells.support).toEqual([]);
 
     // Clearing a field clears it on the report; Ana's set-up is untouched.
@@ -140,6 +155,23 @@ describe("darStore", () => {
     expect(h).toMatchObject({ name: "Dan", position: "" });
     expect(h.core.map((f) => f.duty)).toEqual(["Mine"]);
     expect((await s.header(ana)).core[0].autofill).toBe(true);
+  });
+
+  it("fills a row linked to a module with that module's tickets (and everything inside it), the rest elsewhere", async () => {
+    const s = darStore(db, now);
+    await s.saveProfile(ana.id, {
+      ...QA_SETUP,
+      coreFunctions: [
+        { duty: "Billing UI", mfo: "", autofill: true, areaIds: [bca] },
+        { duty: "Other QA", mfo: "", autofill: true },
+      ],
+      supportFunctions: [],
+    });
+    const r = await s.load(ana, OCT);
+    expect(r.cells.core[0][0]).toBe("Filed #1 T"); // Billing & Collection
+    expect(r.cells.core[1][0]).toBe(NO_ENTRY);
+    expect(r.cells.core[1][4]).toBe("Replied on & verified #2 T"); // HR-RSP isn't linked to a row
+    expect(r.cells.core[0][4]).toBe(NO_ENTRY);
   });
 
   it("writes an Excel file for a report with no rows yet", async () => {
@@ -153,7 +185,7 @@ describe("darStore", () => {
     const r = await s.load(ana, OCT);
     const files = unzipSync(new Uint8Array(await darXlsx(r, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))));
     const all = Object.values(files).map((f) => strFromU8(f)).join("\n");
-    for (const text of ["DAVAO CITY WATER DISTRICT", "Name of PBE :", "Oct 01, 2026 to Oct 15, 2026", "2 Days", "QA - BCA", "A.) CORE FUNCTIONS", "B.) SUPPORT FUNCTION", "Noted by:"]) {
+    for (const text of ["DAVAO CITY WATER DISTRICT", "Name of PBE :", "Oct 01, 2026 to Oct 15, 2026", "11 Days", "Filed #1 T", "A.) CORE FUNCTIONS", "B.) SUPPORT FUNCTION", "Noted by:"]) {
       expect(all).toContain(text);
     }
     expect(all).toContain("OCT\n1\nTHU");

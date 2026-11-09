@@ -1,7 +1,7 @@
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
-import { buildCells, dayEntries, daysAttended, fillDefaults, fitCells, refillCells, type Activity, type DarCells } from "./autofill";
+import { attendedCount, defaultDays, fitDays, type DarDays } from "./attendance";
+import { autoCells, buildCells, fillDefaults, fitCells, mergeCells, statusDefaults, verbFor, type DarCells, type TicketAction, type WorkTime } from "./autofill";
 import { manilaDay, periodDays, periodRange, type Period, type PeriodDay } from "./period";
-import { prefixFor } from "./autofill";
 import { resolveHeader, type DarHeader, type DarProfileInput } from "./template";
 
 // Prisma glue for DARs. Every read and write is for one person's own reports; nobody, admins included, reads
@@ -15,45 +15,97 @@ export type DarReportData = {
   days: PeriodDay[];
   header: DarHeader;
   cells: DarCells;
+  /** Each day's status (Present, Rest day…) and logged times. */
+  status: DarDays;
+  /** What QA Hub wrote in each cell from ticket work, sent back on save so the next update replaces it. */
+  auto: DarCells;
+  /** The person's work days (My account), for after-hours and pasted attendance. */
+  workDays: number;
   dateSubmitted: string;
   daysAttended: number;
   saved: boolean;
 };
 
-const AREA = { select: { name: true, code: true, parent: { select: { name: true, code: true } } } } as const;
+const TICKET = { select: { number: true, title: true, areaId: true } } as const;
+
+/** Monday to Friday, 7:00–18:00: the account defaults, for a person not found (a deleted account in an old test). */
+const DEFAULT_WORK: WorkTime = { workStartMin: 420, workEndMin: 1080, workDays: 62 };
 
 export function darStore(db: PrismaClient, now: () => Date = () => new Date()) {
   async function header(user: DarUser): Promise<DarHeader> {
     return resolveHeader(await db.darProfile.findUnique({ where: { userId: user.id } }), user);
   }
 
-  /** What the person did in QA Hub during the period: tickets filed, replies, and status, assignment or field changes. */
-  async function activity(userId: string, p: Period): Promise<Activity[]> {
+  async function workTime(userId: string): Promise<WorkTime> {
+    return (await db.user.findUnique({ where: { id: userId }, select: { workStartMin: true, workEndMin: true, workDays: true } })) ?? DEFAULT_WORK;
+  }
+
+  /** What the person did in QA Hub during the period, ticket by ticket: filed, replied on, moved, assigned, edited. */
+  async function activity(userId: string, p: Period): Promise<TicketAction[]> {
     const { from, to } = periodRange(p);
     const at = { gte: from, lt: to };
     const [filed, replies, events] = await Promise.all([
-      db.ticket.findMany({ where: { reporterId: userId, createdAt: at }, select: { createdAt: true, area: AREA } }),
-      db.ticketComment.findMany({ where: { authorId: userId, createdAt: at }, select: { createdAt: true, ticket: { select: { area: AREA } } } }),
+      db.ticket.findMany({ where: { reporterId: userId, createdAt: at }, select: { createdAt: true, number: true, title: true, areaId: true } }),
+      db.ticketComment.findMany({ where: { authorId: userId, createdAt: at }, select: { createdAt: true, ticket: TICKET } }),
       // CREATED duplicates "filed"; the rest are moves, assignments and edits.
-      db.ticketEvent.findMany({ where: { actorId: userId, createdAt: at, kind: { not: "CREATED" } }, select: { createdAt: true, ticket: { select: { area: AREA } } } }),
+      db.ticketEvent.findMany({
+        where: { actorId: userId, createdAt: at, kind: { not: "CREATED" } },
+        select: { createdAt: true, kind: true, from: true, to: true, note: true, ticket: TICKET },
+      }),
     ]);
     return [
-      ...filed.map((t) => ({ at: t.createdAt, area: t.area })),
-      ...replies.map((c) => ({ at: c.createdAt, area: c.ticket.area })),
-      ...events.map((e) => ({ at: e.createdAt, area: e.ticket.area })),
+      ...filed.map((t) => ({ at: t.createdAt, areaId: t.areaId, number: t.number, title: t.title, verb: "filed" })),
+      ...replies.map((c) => ({ at: c.createdAt, areaId: c.ticket.areaId, number: c.ticket.number, title: c.ticket.title, verb: "replied on" })),
+      ...events.flatMap((e) => {
+        const verb = verbFor(e);
+        return verb ? [{ at: e.createdAt, areaId: e.ticket.areaId, number: e.ticket.number, title: e.ticket.title, verb }] : [];
+      }),
     ];
   }
 
-  async function fresh(user: DarUser, p: Period, h: DarHeader, days: PeriodDay[]): Promise<DarCells> {
-    return buildCells(h, dayEntries(await activity(user.id, p), days, prefixFor(user.role)), days);
+  /** Each area with the modules above it, nearest first, for linking ticket work to DAR rows. */
+  async function areaChains(): Promise<(areaId: string) => string[]> {
+    const areas = await db.erpArea.findMany({ select: { id: true, parentId: true } });
+    const parentOf = new Map(areas.map((a) => [a.id, a.parentId]));
+    return (id) => {
+      const chain: string[] = [];
+      for (let at: string | null | undefined = id; at && !chain.includes(at); at = parentOf.get(at)) chain.push(at);
+      return chain;
+    };
   }
 
-  async function write(user: DarUser, p: Period, cells: DarCells, dateSubmitted: string) {
-    const data = { periodEnd: p.end, cells: cells as unknown as Prisma.InputJsonValue, dateSubmitted };
+  /** The period worked out fresh: its days, their default statuses, and what QA Hub would write from ticket work. */
+  async function compute(user: DarUser, p: Period) {
+    const days = periodDays(p);
+    const [h, row, work, actions, chainOf] = await Promise.all([
+      header(user),
+      db.darReport.findUnique({ where: { userId_periodStart: { userId: user.id, periodStart: p.start } } }),
+      workTime(user.id),
+      activity(user.id, p),
+      areaChains(),
+    ]);
+    const status = fitDays(row?.days, defaultDays(days, work.workDays, manilaDay(now())));
+    const blank = buildCells(h, days.map(() => ""));
+    const fresh = autoCells(h, actions, days, chainOf, work);
+    // Saved cells (or each day's default), with the newest ticket work merged in; nothing typed is replaced.
+    const base = row ? fitCells(row.cells, buildCells(h, statusDefaults(status, days))) : buildCells(h, statusDefaults(status, days));
+    const before = row ? fitCells(row.autoCells, blank) : blank;
+    return { days, h, row, work, status, blank, fresh, cells: mergeCells(base, before, fresh) };
+  }
+
+  async function write(user: DarUser, p: Period, data: { cells: DarCells; dateSubmitted: string; status?: DarDays; auto?: DarCells }) {
+    const json = (v: unknown) => v as Prisma.InputJsonValue;
+    const values = {
+      periodEnd: p.end,
+      cells: json(data.cells),
+      dateSubmitted: data.dateSubmitted,
+      ...(data.status ? { days: json(data.status) } : {}),
+      ...(data.auto ? { autoCells: json(data.auto) } : {}),
+    };
     await db.darReport.upsert({
       where: { userId_periodStart: { userId: user.id, periodStart: p.start } },
-      update: data,
-      create: { userId: user.id, periodStart: p.start, ...data },
+      update: values,
+      create: { userId: user.id, periodStart: p.start, ...values },
     });
   }
 
@@ -87,32 +139,37 @@ export function darStore(db: PrismaClient, now: () => Date = () => new Date()) {
       await db.darProfile.upsert({ where: { userId }, update: data, create: { userId, ...data } });
     },
 
-    /** The saved draft for the period, or a fresh one filled from ticket activity. */
+    /** The saved draft for the period (or a fresh one), with the newest ticket work merged in. Nothing is saved here. */
     async load(user: DarUser, p: Period): Promise<DarReportData> {
-      const days = periodDays(p);
-      const [h, row] = await Promise.all([header(user), db.darReport.findUnique({ where: { userId_periodStart: { userId: user.id, periodStart: p.start } } })]);
-      const auto = await fresh(user, p, h, days);
-      const cells = row ? fitCells(row.cells, auto) : auto;
-      return { period: p, days, header: h, cells, dateSubmitted: row?.dateSubmitted ?? manilaDay(now()), daysAttended: daysAttended(cells), saved: !!row };
+      const c = await compute(user, p);
+      return {
+        period: p,
+        days: c.days,
+        header: c.h,
+        cells: c.cells,
+        status: c.status,
+        auto: c.fresh,
+        workDays: c.work.workDays,
+        dateSubmitted: c.row?.dateSubmitted ?? manilaDay(now()),
+        daysAttended: attendedCount(c.status),
+        saved: !!c.row,
+      };
     },
 
-    /** Saves what they typed, shaped to the current functions and days. */
-    async save(user: DarUser, p: Period, cells: unknown, dateSubmitted: string): Promise<void> {
+    /** Saves what they typed, the day statuses, and what QA Hub had written (`auto`), shaped to the current rows and days. */
+    async save(user: DarUser, p: Period, input: { cells: unknown; dateSubmitted: string; status?: unknown; auto?: unknown }): Promise<void> {
       const days = periodDays(p);
-      const h = await header(user);
-      const shape = buildCells(h, days.map(() => ""));
-      await write(user, p, fitCells(cells, shape), dateSubmitted);
+      const [h, work] = await Promise.all([header(user), workTime(user.id)]);
+      const blank = buildCells(h, days.map(() => ""));
+      const status = fitDays(input.status, defaultDays(days, work.workDays, manilaDay(now())));
+      await write(user, p, { cells: fitCells(input.cells, blank), dateSubmitted: input.dateSubmitted, status, auto: fitCells(input.auto, blank) });
     },
 
-    /** Re-fills the auto-fill rows from ticket activity; other rows keep what was typed. */
+    /** Merges the newest ticket work into the saved cells now, and saves. Typed text is kept. */
     async refill(user: DarUser, p: Period): Promise<DarCells> {
-      const days = periodDays(p);
-      const [h, row] = await Promise.all([header(user), db.darReport.findUnique({ where: { userId_periodStart: { userId: user.id, periodStart: p.start } } })]);
-      const auto = await fresh(user, p, h, days);
-      const current = row ? fitCells(row.cells, auto) : auto;
-      const cells = refillCells(current, auto, h);
-      await write(user, p, cells, row?.dateSubmitted ?? manilaDay(now()));
-      return cells;
+      const c = await compute(user, p);
+      await write(user, p, { cells: c.cells, dateSubmitted: c.row?.dateSubmitted ?? manilaDay(now()), status: c.status, auto: c.fresh });
+      return c.cells;
     },
 
     /**
@@ -120,12 +177,14 @@ export function darStore(db: PrismaClient, now: () => Date = () => new Date()) {
      * their current duty rows, as a save from the page is. Returns how many periods were written.
      */
     async importReports(user: DarUser, reports: { period: Period; cells: unknown; dateSubmitted: string | null }[]): Promise<number> {
-      const h = await header(user);
+      const [h, work] = await Promise.all([header(user), workTime(user.id)]);
       for (const r of reports) {
         const days = periodDays(r.period);
+        const status = defaultDays(days, work.workDays, manilaDay(now()));
         const shape = buildCells(h, days.map(() => ""));
-        // Days the sheet left blank or dashed take the defaults: REST DAY on weekends and holidays, "-" on work days.
-        await write(user, r.period, fillDefaults(fitCells(r.cells, shape), days), r.dateSubmitted ?? manilaDay(now()));
+        // Days the sheet left blank or dashed take the defaults: REST DAY on days off, "-" on work days.
+        const cells = fillDefaults(fitCells(r.cells, shape), statusDefaults(status, days));
+        await write(user, r.period, { cells, dateSubmitted: r.dateSubmitted ?? manilaDay(now()), status, auto: shape });
       }
       return reports.length;
     },

@@ -25,7 +25,7 @@ describe("module report", () => {
 
   it("counts every ticket by stage under its top-level module, sub-modules rolled up", () => {
     const bill = r.rows.find((x) => x.id === "bill")!;
-    expect(bill.stages).toEqual({ toStart: 1, doing: 1, info: 0, fixed: 0, verified: 0, closed: 1, other: 1, total: 4 });
+    expect(bill.stages).toEqual({ toStart: 1, doing: 1, info: 0, fixed: 0, closed: 1, other: 1, total: 4 });
     // The same score as the dashboard: 1 closed of 3 counted, scored out of at least 5.
     expect(bill.score).toEqual({ done: 1, total: 3, pct: 20 });
     expect(bill.categories.FRONT_END).toEqual({ done: 1, total: 2, pct: 50 });

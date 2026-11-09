@@ -8,7 +8,8 @@ import { Field, FormMessage } from "@/components/form-field";
 import { SelectField } from "@/components/select-field";
 import { InlineAlert } from "@/components/inline-alert";
 import { Button } from "@/components/ui/button";
-import { daysAttended, REST_DAY, type DarCells } from "@/lib/dar/autofill";
+import { attendedCount, isOffStatus, type DarDays, type DayStatus } from "@/lib/dar/attendance";
+import { NO_ENTRY, REST_DAY, type DarCells } from "@/lib/dar/autofill";
 import { darHtml, PRINT_PAGE, PRINT_PAPER } from "@/lib/dar/html";
 import type { DarReportData } from "@/lib/dar/store";
 import { isEmptySetup } from "@/lib/dar/template";
@@ -16,6 +17,7 @@ import { initialFormState, type FormState } from "@/lib/form";
 import { cn } from "@/lib/utils";
 import { refillDar, saveDar } from "./actions";
 import { DarSheet } from "./dar-sheet";
+import { PasteAttendance } from "./paste-attendance";
 
 type PeriodOption = { start: string; label: string; saved: boolean };
 
@@ -36,12 +38,14 @@ export function DarEditor({
   const router = useRouter();
   const [cells, setCells] = useState<DarCells>(report.cells);
   const [dateSubmitted, setDateSubmitted] = useState(report.dateSubmitted);
+  const [status, setStatus] = useState<DarDays>(report.status);
   const [dirty, setDirty] = useState(false);
   const [note, setNote] = useState<FormState | null>(null);
   const [busy, startTransition] = useTransition();
   const [downloading, setDownloading] = useState(false);
 
-  const attended = daysAttended(cells);
+  // Days Attended counts the Present days (on-site), not cells with text.
+  const attended = attendedCount(status);
   const period = report.period.start;
   const h = report.header;
   const empty = isEmptySetup(h);
@@ -59,11 +63,42 @@ export function DarEditor({
     setDirty(true);
   }
 
+  /**
+   * A day's status changed: a day turning into a day off swaps its untouched "-" cells for REST DAY, and back. Cells with
+   * anything else written in them are left alone.
+   */
+  function changeDays(next: DarDays) {
+    const idx = report.days.map((d) => d.date);
+    setCells((c) => {
+      const swap = (rows: string[][]) =>
+        rows.map((r) =>
+          r.map((v, j) => {
+            const before = status[idx[j]]?.status;
+            const after = next[idx[j]]?.status;
+            if (!before || !after || isOffStatus(before) === isOffStatus(after)) return v;
+            if (isOffStatus(after) && v.trim() === NO_ENTRY) return REST_DAY;
+            if (!isOffStatus(after) && v.trim() === REST_DAY) return NO_ENTRY;
+            return v;
+          }),
+        );
+      return { core: swap(c.core), support: swap(c.support) };
+    });
+    setStatus(next);
+    setDirty(true);
+  }
+
+  function setDayStatus(date: string, s: DayStatus) {
+    changeDays({ ...status, [date]: { ...status[date], status: s } });
+  }
+
   async function save(): Promise<boolean> {
     const fd = new FormData();
     fd.set("period", period);
     fd.set("cells", JSON.stringify(cells));
     fd.set("dateSubmitted", dateSubmitted);
+    fd.set("status", JSON.stringify(status));
+    // What QA Hub wrote from ticket work when this page loaded, so the next update replaces it instead of adding it twice.
+    fd.set("auto", JSON.stringify(report.auto));
     const r = await saveDar(initialFormState, fd);
     setNote(r);
     if (r.ok) {
@@ -74,7 +109,7 @@ export function DarEditor({
   }
 
   function refill() {
-    if (!window.confirm("Fill the days in again from your ticket work? This replaces what's in the rows marked “from my ticket work”. Other rows are kept.")) return;
+    if (dirty && !window.confirm("Add your latest ticket work now? Unsaved changes on this page are lost; save first to keep them.")) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.set("period", period);
@@ -178,11 +213,12 @@ export function DarEditor({
           {empty ? null : (
             <>
               <Button variant="outline" onClick={refill} disabled={busy}>
-                <RefreshCwIcon className={cn(busy && "animate-spin")} /> Refill from tickets
+                <RefreshCwIcon className={cn(busy && "animate-spin")} /> Add latest ticket work
               </Button>
               <Button variant="outline" onClick={() => startTransition(async () => void (await save()))} disabled={busy || !dirty}>
                 {dirty ? <SaveIcon /> : <CheckIcon />} {dirty ? "Save" : report.saved || note?.ok ? "Saved" : "Save"}
               </Button>
+              <PasteAttendance status={status} workDays={report.workDays} onApply={changeDays} />
               <Button variant="outline" onClick={print}>
                 <PrinterIcon /> Print
               </Button>
@@ -219,6 +255,8 @@ export function DarEditor({
             cells={cells}
             dateSubmitted={dateSubmitted}
             daysAttended={attended}
+            status={status}
+            onStatus={setDayStatus}
             onCell={setCell}
             onDateSubmitted={(d) => {
               setDateSubmitted(d);
@@ -226,9 +264,10 @@ export function DarEditor({
             }}
           />
           <p className="-mt-2 text-[0.7813rem] text-muted-foreground">
-            Click any day to type in it. Rows marked <span className="font-medium text-primary-text">↻ from my ticket work</span> are filled from the tickets you filed, replied to
-            or moved each day, using the module Codes in Team &amp; modules. A work day with nothing is &ldquo;-&rdquo;, and Saturdays, Sundays and holidays are {REST_DAY}; type over any of them if you worked outside QA Hub (e.g. HR201,
-            encoding). Click the date submitted to change it.
+            Click any day to type in it. Rows marked <span className="font-medium text-primary-text">↻ from my ticket work</span> fill in by themselves from the tickets you filed,
+            replied to or moved, one entry per ticket; work outside your work hours (My account) is marked &ldquo;After hours&rdquo;. What you type is never replaced. A work day
+            with nothing is &ldquo;-&rdquo;, a day off {REST_DAY}. Each day&apos;s status under its date sets Days Attended (Present days); use Paste attendance to fill them
+            from the ERP. Click the date submitted to change it.
           </p>
         </>
       )}

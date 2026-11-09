@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areaPath, buildTree, nextSortOrder, placementError, type AreaNode } from "@/lib/areas/tree";
+import { areaPath, buildTree, canHaveChildren, depthOf, descendantIds, flatten, nextSortOrder, pathTo, placementError, rootName, rootOf, type AreaNode } from "@/lib/areas/tree";
 import { areaInput, areaMembersInput } from "@/lib/schemas/area";
 import { passwordChangeInput, userInput } from "@/lib/schemas/user";
 
@@ -12,6 +12,33 @@ const areas: AreaNode[] = [
 ];
 
 describe("area tree", () => {
+  const deep: AreaNode[] = [
+    ...areas,
+    { id: "up", parentId: "mr", name: "Reading Upload", sortOrder: 10 },
+    { id: "rv", parentId: "mr", name: "Review", sortOrder: 0 },
+  ];
+
+  it("nests a third level and finds paths, depths, roots and everything inside", () => {
+    const tree = buildTree(deep);
+    const mr = tree[0].children.find((c) => c.id === "mr")!;
+    expect(mr.children.map((c) => c.id)).toEqual(["rv", "up"]);
+    expect(flatten(tree).map((a) => a.id)).toEqual(["bca", "col", "nsc", "mr", "rv", "up", "fin"]);
+    expect(pathTo(tree, "up").map((a) => a.name)).toEqual(["Billing & Collection", "Meter Reading", "Reading Upload"]);
+    expect(pathTo(tree, "nope")).toEqual([]);
+    expect([depthOf(deep, "bca"), depthOf(deep, "mr"), depthOf(deep, "up"), depthOf(deep, "nope")]).toEqual([1, 2, 3, 0]);
+    expect(rootOf(deep, "up")).toBe("bca");
+    expect(rootOf(deep, "fin")).toBe("fin");
+    expect(descendantIds(deep, "bca").sort()).toEqual(["bca", "col", "mr", "nsc", "rv", "up"]);
+    expect(descendantIds(deep, "mr").sort()).toEqual(["mr", "rv", "up"]);
+  });
+
+  it("names an area by its whole path", () => {
+    const upload = { name: "Reading Upload", parent: { name: "Meter Reading", parent: { name: "Billing & Collection" } } };
+    expect(areaPath(upload)).toBe("Billing & Collection › Meter Reading › Reading Upload");
+    expect(rootName(upload)).toBe("Billing & Collection");
+    expect(rootName({ name: "Finance", parent: null })).toBe("Finance");
+  });
+
   it("groups sub-modules under modules in sort order, then by name", () => {
     const tree = buildTree(areas);
     expect(tree.map((m) => m.id)).toEqual(["bca", "fin"]);
@@ -33,9 +60,23 @@ describe("placementError", () => {
     expect(placementError(areas, { id: "mr", parentId: "fin", name: "Meter Reading" })).toBeNull();
   });
 
-  it("keeps the tree two levels deep", () => {
-    expect(placementError(areas, { parentId: "mr", name: "Too deep" })).toMatch(/can't have sub-modules/);
-    expect(placementError(areas, { id: "bca", parentId: "fin", name: "Billing & Collection" })).toMatch(/has sub-modules/);
+  it("allows a third level, and no deeper", () => {
+    // Billing & Collection › Meter Reading › Reading Upload is fine…
+    expect(placementError(areas, { parentId: "mr", name: "Reading Upload" })).toBeNull();
+    const three: AreaNode[] = [...areas, { id: "up", parentId: "mr", name: "Reading Upload", sortOrder: 0 }];
+    // …but nothing goes inside the third level.
+    expect(placementError(three, { parentId: "up", name: "Too deep" })).toMatch(/3 levels deep at most/);
+    // Moving a module that has a sub-module (and one under that) inside another module would make four levels.
+    expect(placementError(three, { id: "bca", parentId: "fin", name: "Billing & Collection" })).toMatch(/deeper than 3 levels/);
+    // A module with only sub-modules can go inside another module: three levels.
+    expect(placementError(areas, { id: "bca", parentId: "fin", name: "Billing & Collection" })).toBeNull();
+    expect(canHaveChildren(three, "mr")).toBe(true);
+    expect(canHaveChildren(three, "up")).toBe(false);
+  });
+
+  it("won't move an area inside its own sub-module", () => {
+    const three: AreaNode[] = [...areas, { id: "up", parentId: "mr", name: "Reading Upload", sortOrder: 0 }];
+    expect(placementError(three, { id: "bca", parentId: "up", name: "Billing & Collection" })).toMatch(/its own sub-modules/);
   });
 
   it("rejects cycles and missing parents", () => {
@@ -69,6 +110,12 @@ describe("area schemas", () => {
     expect(areaMembersInput.safeParse({ areaId: "a", members: ["u1"], lead: "" }).success).toBe(true);
     expect(areaMembersInput.safeParse({ areaId: "a", members: ["u1"], lead: "u3" }).success).toBe(false);
   });
+
+  it("marks members who work on the area as its UI/UX designer, and only members", () => {
+    expect(areaMembersInput.parse({ areaId: "a", members: ["u1", "u2"], lead: "" }).designers).toEqual([]);
+    expect(areaMembersInput.parse({ areaId: "a", members: ["u1", "u2"], lead: "u2", designers: ["u1"] }).designers).toEqual(["u1"]);
+    expect(areaMembersInput.safeParse({ areaId: "a", members: ["u1"], lead: "", designers: ["u9"] }).success).toBe(false);
+  });
 });
 
 describe("nextSortOrder", () => {
@@ -86,7 +133,7 @@ describe("nextSortOrder", () => {
 
 describe("user schemas", () => {
   it("lower-cases emails and validates roles", () => {
-    expect(userInput.parse({ name: " Ana ", email: " Ana@Davao-Water.GOV.PH ", role: "QA" })).toEqual({ name: "Ana", email: "ana@davao-water.gov.ph", role: "QA", designer: false });
+    expect(userInput.parse({ name: " Ana ", email: " Ana@Davao-Water.GOV.PH ", role: "QA" })).toEqual({ name: "Ana", email: "ana@davao-water.gov.ph", role: "QA", designer: false, teamLead: false });
     expect(userInput.safeParse({ name: "Ana", email: "not-an-email", role: "QA" }).success).toBe(false);
     expect(userInput.safeParse({ name: "Ana", email: "a@davao-water.gov.ph", role: "OWNER" }).success).toBe(false);
   });

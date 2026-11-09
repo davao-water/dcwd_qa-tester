@@ -6,7 +6,7 @@ import type { Tone } from "@/components/status-pill";
 import type { TicketGroup } from "@/lib/schemas/ticket";
 import { DONE_STATUSES, OPEN_STATUSES, TICKET_STATUSES, TO_START, TO_START_STATUSES, type TicketStatus, type Transition } from "./workflow";
 
-export type BoardColumnKey = "todo" | "doing" | "info" | "fixed" | "verified" | "done";
+export type BoardColumnKey = "todo" | "doing" | "info" | "fixed" | "done";
 
 export type BoardColumn = { key: BoardColumnKey; label: string; statuses: readonly TicketStatus[]; tone: Tone; hint: string };
 
@@ -14,8 +14,8 @@ export const BOARD_COLUMNS: readonly BoardColumn[] = [
   { key: "todo", label: "To do", statuses: ["NEW", "REOPENED"], tone: "info", hint: "New and reopened tickets wait here for the developer to start." },
   { key: "doing", label: "In progress", statuses: ["IN_PROGRESS"], tone: "acc", hint: "The developer is working on these." },
   { key: "info", label: "Needs info", statuses: ["NEED_INFO"], tone: "warn", hint: "The developer is waiting for an answer from QA." },
-  { key: "fixed", label: "Fixed", statuses: ["FIXED"], tone: "ok", hint: "Fixed and waiting for QA to retest." },
-  { key: "verified", label: "Verified", statuses: ["VERIFIED"], tone: "ok", hint: "Retested and ready to close." },
+  // Verified on its own is no longer a step (QA verifies and closes in one move); tickets already Verified wait here.
+  { key: "fixed", label: "Fixed", statuses: ["FIXED", "VERIFIED"], tone: "ok", hint: "Fixed and waiting for QA to retest and close." },
   { key: "done", label: "Done", statuses: DONE_STATUSES, tone: "neutral", hint: "Closed, rejected, duplicate and won't fix." },
 ];
 
@@ -43,7 +43,8 @@ export function columnInView(key: BoardColumnKey, view: { group: TicketGroup; st
  */
 export function movesInto(column: BoardColumnKey, moves: readonly Transition[]): Transition[] {
   const { statuses } = boardColumn(column);
-  return moves.filter((m) => statuses.includes(m.to));
+  // Not a bug is a reason inside Won't fix, so dropping on Done offers Won't fix, which asks for it.
+  return moves.filter((m) => statuses.includes(m.to) && !m.within);
 }
 
 /** Tickets opens as the list or the board: the last one picked in this browser, kept in a cookie the page reads. */

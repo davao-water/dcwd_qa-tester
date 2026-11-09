@@ -19,6 +19,11 @@ export const darFunction = z
     autofill: z.boolean().default(false),
     /** Another MFO of the duty in the row above. */
     continues: z.boolean().optional(),
+    /**
+     * With `autofill`: the modules (any level, everything inside them included) whose ticket work fills this row. None:
+     * the row takes ticket work that no other row is linked to.
+     */
+    areaIds: z.array(z.string().min(1)).max(20).optional(),
   })
   .refine((f) => f.continues || f.duty.length > 0, { message: "Describe the duty.", path: ["duty"] });
 export type DarFunction = z.infer<typeof darFunction>;

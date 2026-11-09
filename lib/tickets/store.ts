@@ -1,5 +1,5 @@
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
-import { areaPath } from "@/lib/areas/tree";
+import { AREA_PATH_SELECT, areaPath, descendantIds } from "@/lib/areas/tree";
 import { can } from "@/lib/auth/permissions";
 import type { TicketCreate, TicketEdit, TicketFilters, TransitionInput } from "@/lib/schemas/ticket";
 import { MAX_IMAGES_PER_POST, MAX_PENDING_PER_USER, MAX_VIDEOS_PER_POST, type UploadKind } from "@/lib/uploads/limits";
@@ -8,6 +8,7 @@ import { memberModules, moduleProgress as buildModuleProgress } from "./progress
 import {
   canAssign,
   canCategorize,
+  canHandBack,
   canReadTicket,
   CATEGORY_LABELS,
   NO_CATEGORY,
@@ -79,7 +80,7 @@ const listSelect = {
   createdAt: true,
   lastActivityAt: true,
   areaId: true,
-  area: { select: { name: true, parent: { select: { name: true } } } },
+  area: { select: AREA_PATH_SELECT },
   assignee: { select: { id: true, name: true } },
   reporter: { select: { id: true, name: true } },
   _count: { select: { comments: true } },
@@ -102,17 +103,17 @@ export function ticketStore(db: PrismaClient, now: () => Date = () => new Date()
     return t;
   }
 
-  /** The assignee must be an active developer or admin. Returns their name for the timeline. */
+  /** The assignee must be an active developer (not QA, not an admin). Returns their name for the timeline. */
   async function assigneeName(assigneeId: string | null): Promise<string | null> {
     if (!assigneeId) return null;
     const u = await db.user.findUnique({ where: { id: assigneeId }, select: { name: true, role: true, active: true } });
-    if (!u || !u.active || u.role === "QA") throw new TicketError("Pick an active developer or admin to assign.");
+    if (!u || !u.active || u.role !== "DEV") throw new TicketError("Pick an active developer to assign.");
     return u.name;
   }
 
   async function areaLabel(areaId: string | null): Promise<string | null> {
     if (!areaId) return null;
-    const a = await db.erpArea.findUnique({ where: { id: areaId }, select: { name: true, parent: { select: { name: true } } } });
+    const a = await db.erpArea.findUnique({ where: { id: areaId }, select: AREA_PATH_SELECT });
     if (!a) throw new TicketError("That module no longer exists. Refresh the page.");
     return areaPath(a);
   }
@@ -152,10 +153,10 @@ export function ticketStore(db: PrismaClient, now: () => Date = () => new Date()
     await tx.pendingUpload.deleteMany({ where: { id: { in: ids } } });
   }
 
-  /** A module and its sub-modules, for the module filter. */
+  /** A module and everything inside it, at every level, for the module filter. */
   async function withSubModules(areaId: string): Promise<string[]> {
-    const subs = await db.erpArea.findMany({ where: { parentId: areaId }, select: { id: true } });
-    return [areaId, ...subs.map((s) => s.id)];
+    const all = await db.erpArea.findMany({ select: { id: true, parentId: true } });
+    return descendantIds(all, areaId);
   }
 
   /** The list (and board) filters, within what `actor` may see. `areaIds`: the module filter, already looked up. */
@@ -324,6 +325,35 @@ export function ticketStore(db: PrismaClient, now: () => Date = () => new Date()
         if (moved.count === 0) throw new TicketError("Someone else just changed this ticket. Refresh the page and try again.");
         await tx.ticketEvent.create({ data: { ticketId: id, actorId: actor.id, kind: "STATUS", from: t.status, to: input.to, note, createdAt: at } });
       });
+    },
+
+    /**
+     * Won't fix → "Another developer should take it": the ticket goes back to QA unassigned, still open, with who the
+     * developer recommends (optional) and why. In progress goes back to New; other open statuses stay. QA assigns it.
+     */
+    async handBack(actor: Actor, id: string, input: { recommendId: string | null; note: string }): Promise<{ recommended: string | null }> {
+      const t = await load(id, actor);
+      if (!canHandBack(t, actor)) throw new TicketError("Only the assigned developer can hand this ticket back, while it is still open.");
+      const note = input.note.trim();
+      if (!note) throw new TicketError("Add a note explaining why.");
+      if (input.recommendId === actor.id || input.recommendId === t.assigneeId) throw new TicketError("Recommend a different developer, or leave it for QA to pick.");
+      const recommended = await assigneeName(input.recommendId);
+      const from = t.assigneeId ? ((await db.user.findUnique({ where: { id: t.assigneeId }, select: { name: true } }))?.name ?? null) : null;
+      const status = t.status === "IN_PROGRESS" ? "NEW" : t.status;
+      const why = recommended ? `Recommends ${recommended}. ${note}` : `Needs another developer. ${note}`;
+
+      await db.$transaction(async (tx) => {
+        const at = now();
+        // Only if nobody changed it since this page was loaded.
+        const moved = await tx.ticket.updateMany({
+          where: { id, status: t.status, assigneeId: t.assigneeId },
+          data: { assigneeId: null, status, lastActivityAt: at, lastActivityById: actor.id },
+        });
+        if (moved.count === 0) throw new TicketError("Someone else just changed this ticket. Refresh the page and try again.");
+        await tx.ticketEvent.create({ data: { ticketId: id, actorId: actor.id, kind: "ASSIGNEE", from, to: null, note: why, createdAt: at } });
+        if (status !== t.status) await tx.ticketEvent.create({ data: { ticketId: id, actorId: actor.id, kind: "STATUS", from: t.status, to: status, note: why, createdAt: at } });
+      });
+      return { recommended };
     },
 
     async comment(actor: Actor, id: string, body: string, uploadIds: string[] = []): Promise<string> {
@@ -511,7 +541,7 @@ export function ticketStore(db: PrismaClient, now: () => Date = () => new Date()
           priority: true,
           createdAt: true,
           lastActivityAt: true,
-          area: { select: { name: true, parent: { select: { name: true } } } },
+          area: { select: AREA_PATH_SELECT },
           assignee: { select: { name: true } },
           reporter: { select: { name: true } },
         },
@@ -533,7 +563,7 @@ export function ticketStore(db: PrismaClient, now: () => Date = () => new Date()
       return db.ticket.findFirst({
         where: { number, ...readWhere(actor) },
         include: {
-          area: { select: { id: true, name: true, parent: { select: { name: true } } } },
+          area: { select: { id: true, ...AREA_PATH_SELECT } },
           reporter: person,
           assignee: person,
           duplicateOf: { select: { number: true, title: true } },

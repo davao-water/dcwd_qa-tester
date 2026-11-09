@@ -42,6 +42,8 @@ export const userInput = z.object({
   email,
   role: z.enum(ROLES, "Pick a role"),
   designer: z.boolean().default(false),
+  /** Manages Team & modules on top of the role. */
+  teamLead: z.boolean().default(false),
 });
 
 export const userUpdateInput = userInput.extend({

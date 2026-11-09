@@ -20,19 +20,19 @@ export async function saveDar(_prev: FormState, fd: FormData): Promise<FormState
   if (!period) return { ok: false, message: "That period isn't valid. Pick one from the list." };
   const dateSubmitted = text(fd, "dateSubmitted");
   if (!DATE.test(dateSubmitted)) return { ok: false, message: "Pick the date submitted." };
-  await dar.save(me, period, jsonField(fd, "cells"), dateSubmitted);
+  await dar.save(me, period, { cells: jsonField(fd, "cells"), dateSubmitted, status: jsonField(fd, "status"), auto: jsonField(fd, "auto") });
   revalidatePath("/dar");
   return { ok: true, message: "Saved." };
 }
 
-/** Re-fills the rows marked "fill from my ticket work"; the other rows keep what was typed. */
+/** Adds the newest ticket work to the rows marked "fill from my ticket work" and saves; nothing typed is replaced. */
 export async function refillDar(_prev: FormState, fd: FormData): Promise<FormState & { cells?: DarCells }> {
   const me = await requireAction("dar.use");
   const period = parsePeriod(text(fd, "period"));
   if (!period) return { ok: false, message: "That period isn't valid. Pick one from the list." };
   const cells = await dar.refill(me, period);
   revalidatePath("/dar");
-  return { ok: true, message: "Filled in again from your ticket work.", cells };
+  return { ok: true, message: "Added your latest ticket work.", cells };
 }
 
 /** My details: everything fixed on the person's own report, used for every period. */

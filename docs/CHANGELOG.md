@@ -1,5 +1,77 @@
 # Changelog
 
+## My DAR fills itself from tickets, with day statuses and pasted attendance (2026-11-06)
+
+One database change: `DarReport.days` and `DarReport.autoCells` (migration `20261106000500_dar_days`). Run `npm run db:deploy`.
+
+- **One entry per ticket**, for QA testers and developers: "Filed & replied on #123 PDS layout; verified and closed #118
+  NSC form", three tickets then "+2 more". It replaces "QA - BCA / CRM".
+- **Rows linked to modules (My details):** a row ticked "Fill this row's days from my ticket work" picks the modules whose
+  tickets fill it, at any level, everything inside a module included. Work goes to the row linked to the nearest module
+  (Purchase Requisition before Procurement); a fill row with no modules takes the rest. Old set-ups keep working.
+- **Never over what you typed:** new ticket work is merged in each time My DAR opens. A "-" cell gets the entry, a REST DAY
+  cell becomes "REST DAY · …", and a cell with your own text gets the entry after it. QA Hub's own earlier entry is
+  updated in place, never added twice. "Add latest ticket work" does the same and saves.
+- **After hours:** ticket work outside your work hours and days (My account → Notifications) is written as "After hours:
+  …", on screen, in the print and in the Excel file.
+- **Day statuses:** under each date on the sheet: Present, Remote (crisis), Leave, Absent, Rest day, Holiday. They start
+  from your work days and the holiday calendar; days still to come are "Not yet". "Actual No. of Days Attended" counts
+  Present days only. Turning a day into a day off swaps its untouched "-" cells for REST DAY, and back. On screen only:
+  the paper form has no row for them.
+- **Paste attendance:** copy your rows from the ERP's attendance log inquiry (linked in the window) and paste. QA Hub reads
+  each day's first time-in and last time-out and where, repeated taps once, and shows a preview. Apply sets those days
+  Present; a work day with no time-in becomes Absent, to change to Leave or Remote. Read in the browser; only the
+  statuses and times are kept. Names, employee numbers and device codes aren't.
+- Code: `lib/dar/attendance.ts`, `autoCells` / `describe` / `mergeCell` / `verbFor` in `lib/dar/autofill.ts` (tested),
+  `app/(main)/dar/paste-attendance.tsx`.
+
+## Fewer ticket moves, Won't fix reasons, no admins as assignees (2026-11-06)
+
+No database changes. Tickets already Verified or Rejected keep their status.
+
+- **Verify and close:** QA closes a fixed ticket in one move (was Mark as verified, then Close). Undo verify is gone;
+  Reopen covers it. A ticket already Verified closes the same way. The board's Verified column, the Verified step on each
+  ticket's progress tracker and the module report's Verified stage fold into Fixed.
+- **Won't fix asks why:** *It can't be fixed* (Won't fix), *It isn't a bug* (Rejected; the separate Reject button is
+  gone), or *Another developer should take it*: the ticket goes back to the QA tester, unassigned and still open (In
+  progress goes back to New), with the developer they recommend (optional) and why, in the log and in a notification. QA
+  assigns it. Developers still can't assign tickets.
+- **Assigning:** only developers can be picked; admins are no longer in the list (the server refuses them too). Tickets
+  already with an admin keep them until someone reassigns.
+- Code: `within` moves and `canHandBack` in `lib/tickets/workflow.ts`, `ticketStore.handBack`, `handBackTicket`, the
+  `handedBack` notification (all tested).
+
+## Team Leads and a UI/UX column (2026-11-06)
+
+Two database changes: `User.teamLead` (migration `20261106000300_user_team_lead`) and `AreaMember.asDesigner`
+(`20261106000400_area_member_designer`). Run `npm run db:deploy`.
+
+- **Team Lead tick-box:** in Users, next to Designer. A QA tester or developer with it manages Team & modules like an
+  admin: add, edit, hide and delete modules and sub-modules at every level, and set each area's members and lead. Users
+  (accounts, roles, sign-ups, passwords) stays admin-only. Shown as a "Team Lead" pill in Users and in the "Show
+  modules for" list. One rule in `lib/auth/permissions.ts` (`FLAG_GRANTS`: `areas.manage` ← `teamLead`, tested).
+- **UI/UX per module:** in a module's Members window, anyone with the Designer tick-box has a **UI/UX** option next to
+  their name. Ticked, they work on that module as its UI/UX designer and are listed in the new **UI/UX** column instead of
+  Developers or QA; in other modules they stay under their role. A lead who designs for it stays in Lead with a UI/UX tag.
+  Saving checks that only people with the Designer tick-box are marked UI/UX.
+
+## Modules three levels deep (2026-11-06)
+
+No database changes (an area already pointed at its parent; only the two-level rule was in the code).
+
+- **A sub-module can have its own sub-modules:** Procurement › Purchase Requisition › Approval. On Team & modules, each
+  sub-module row has an add button for the level under it; the "Inside" picker lists modules and sub-modules by their
+  full path. Three levels at most (`MAX_DEPTH` in `lib/areas/tree.ts`); moving an area somewhere that would go deeper, or
+  inside its own sub-module, is refused with a reason. Adding, renaming, hiding and deleting work at every level, as before.
+- **Everywhere a module shows:** dropdowns list the third level indented under its sub-module; tickets, the inbox, the
+  dashboard and Users name an area by its whole path.
+- **Filtering by a module or sub-module** includes everything inside it, at every level. Module progress, the module
+  report and "my modules" count a third-level area towards its top-level module. Assigning suggests the developers of the
+  area and of every module it sits inside.
+- **DAR:** an area with no Code takes the nearest Code above it.
+- Code: `buildTree`, `flatten`, `pathTo`, `depthOf`, `rootOf`, `descendantIds`, `AREA_PATH_SELECT` in `lib/areas/tree.ts`
+  (tested). The module import file (`lib/areas/import.ts`) still reads two levels.
+
 ## DAR import from Excel, period days, markup fit, softer dark mode (2026-11-06)
 
 One database change: `DarProfile.periodScheme` (migration `20261106000200_dar_period_scheme`). Run `npm run db:deploy`.

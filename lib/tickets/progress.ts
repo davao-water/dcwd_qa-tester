@@ -1,3 +1,4 @@
+import { rootOf } from "@/lib/areas/tree";
 import { TICKET_CATEGORIES, type TicketCategoryValue, type TicketStatus } from "./workflow";
 
 // Module progress: for each top-level module, the share of its tickets in each category that are closed, and one fair
@@ -51,8 +52,8 @@ export const fairScore = (done: number, total: number) => percent(done, Math.max
 /** One card per active top-level module, lowest score first, then by name; modules with no counted tickets last. */
 export function moduleProgress(areas: ProgressArea[], tickets: ProgressTicket[]): ModuleProgress[] {
   const tops = areas.filter((a) => a.parentId === null && a.active);
-  const topOf = new Map<string, string>();
-  for (const a of areas) topOf.set(a.id, a.parentId ?? a.id);
+  // Every area counts towards its top-level module, however deep it sits.
+  const topOf = new Map(areas.map((a) => [a.id, rootOf(areas, a.id)]));
 
   const tally = new Map(tops.map((a) => [a.id, { untagged: 0, done: {} as Record<string, number>, total: {} as Record<string, number> }]));
   for (const t of tickets) {
@@ -91,9 +92,9 @@ export function moduleProgress(areas: ProgressArea[], tickets: ProgressTicket[])
   });
 }
 
-/** Keeps the modules a person belongs to, directly or through one of its sub-modules. */
+/** Keeps the modules a person belongs to, directly or through anything inside it. */
 export function memberModules(areas: ProgressArea[], memberAreaIds: string[]): Set<string> {
-  const topOf = new Map(areas.map((a) => [a.id, a.parentId ?? a.id]));
+  const topOf = new Map(areas.map((a) => [a.id, rootOf(areas, a.id)]));
   return new Set(memberAreaIds.map((id) => topOf.get(id)).filter((id): id is string => !!id));
 }
 

@@ -9,7 +9,7 @@ export const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 /** A session is pushed back to the full TTL once less than this is left, so active users stay signed in. */
 const SLIDE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type SessionUser = { id: string; name: string; email: string; role: Role; designer: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null };
+export type SessionUser = { id: string; name: string; email: string; role: Role; designer: boolean; teamLead: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null };
 
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 export const newToken = () => randomBytes(32).toString("base64url");
@@ -18,7 +18,7 @@ export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 /** A sign-up's browser can get a new temporary password at most this often. */
 export const CLAIM_EVERY_MS = 60 * 1000;
 
-const userSelect = { id: true, name: true, email: true, role: true, designer: true, mustChangePassword: true, active: true, avatarColor: true, avatarName: true } as const;
+const userSelect = { id: true, name: true, email: true, role: true, designer: true, teamLead: true, mustChangePassword: true, active: true, avatarColor: true, avatarName: true } as const;
 
 export function authStore(db: PrismaClient, now: () => Date = () => new Date()) {
   /**
@@ -224,13 +224,14 @@ export function authStore(db: PrismaClient, now: () => Date = () => new Date()) 
       return u ? verifyPassword(password, u.passwordHash) : false;
     },
 
-    async createUser(input: { name: string; email: string; role: Role; designer?: boolean; password: string; mustChangePassword?: boolean }) {
+    async createUser(input: { name: string; email: string; role: Role; designer?: boolean; teamLead?: boolean; password: string; mustChangePassword?: boolean }) {
       return db.user.create({
         data: {
           name: input.name,
           email: normalizeEmail(input.email),
           role: input.role,
           designer: input.designer ?? false,
+          teamLead: input.teamLead ?? false,
           passwordHash: await hashPassword(input.password),
           mustChangePassword: input.mustChangePassword ?? true,
         },
@@ -247,6 +248,6 @@ export function authStore(db: PrismaClient, now: () => Date = () => new Date()) 
   };
 }
 
-function toSessionUser(u: { id: string; name: string; email: string; role: string; designer: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null }): SessionUser {
-  return { id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, mustChangePassword: u.mustChangePassword, avatarColor: u.avatarColor, avatarName: u.avatarName };
+function toSessionUser(u: { id: string; name: string; email: string; role: string; designer: boolean; teamLead: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null }): SessionUser {
+  return { id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, teamLead: u.teamLead, mustChangePassword: u.mustChangePassword, avatarColor: u.avatarColor, avatarName: u.avatarName };
 }

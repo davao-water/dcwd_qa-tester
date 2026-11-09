@@ -1,3 +1,4 @@
+import { AREA_PATH_SELECT, areaPath } from "@/lib/areas/tree";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -189,7 +190,7 @@ async function workHome(me: { id: string; name: string; role: WorkRole } & Actor
     tickets.recent(me),
     db.areaMember.findMany({
       where: { userId: me.id },
-      select: { isLead: true, area: { select: { id: true, name: true, parent: { select: { name: true } } } } },
+      select: { isLead: true, area: { select: { id: true, ...AREA_PATH_SELECT } } },
     }),
     tickets.moduleProgress(scope.value === "mine" ? me.id : undefined),
   ]);
@@ -218,7 +219,7 @@ async function workHome(me: { id: string; name: string; role: WorkRole } & Actor
           />
           <SideCard title="My modules" link={{ href: `/team?person=${me.id}`, label: "Directory" }} empty="You aren’t in a module yet. Ask an admin to add you.">
             {myAreas.map((a) => (
-              <SideRow key={a.area.id} name={`${a.area.parent ? `${a.area.parent.name} › ` : ""}${a.area.name}`}>
+              <SideRow key={a.area.id} name={areaPath(a.area)}>
                 {a.isLead ? <span className="shrink-0 rounded-full bg-acc-t px-2 py-0.5 text-[0.75rem] font-semibold text-acc-ink">Lead</span> : null}
               </SideRow>
             ))}

@@ -112,9 +112,12 @@ type Task =
 export function TicketBoard({
   columns: fromServer,
   assign,
+  developers,
 }: {
   columns: BoardColumnData[];
   assign: { areas: AreaOption[]; people: AssigneeOption[] } | null;
+  /** Who a developer can recommend when Won't fix hands a ticket back to QA. */
+  developers: { id: string; name: string }[];
 }) {
   const [drag, setDrag] = useState<BoardCard | null>(null);
   const dragging = useRef<BoardCard | null>(null);
@@ -350,6 +353,7 @@ export function TicketBoard({
               task={task}
               open={open}
               assign={assign}
+              developers={developers}
               onPick={(m) =>
                 task.kind === "move" && setTask({ ...task, move: m })
               }
@@ -688,7 +692,7 @@ function CardMenu({
                   <Menu.GroupLabel className="px-3 pt-1.5 pb-1 text-[0.7188rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                     Move
                   </Menu.GroupLabel>
-                  {card.moves.map((m) => (
+                  {card.moves.filter((m) => !m.within).map((m) => (
                     <Menu.Item
                       key={m.to}
                       className={item}
@@ -727,12 +731,14 @@ function TaskDialog({
   task,
   open,
   assign,
+  developers,
   onPick,
   onDone,
 }: {
   task: Task;
   open: boolean;
   assign: { areas: AreaOption[]; people: AssigneeOption[] } | null;
+  developers: { id: string; name: string }[];
   onPick: (m: Transition | null) => void;
   onDone: () => void;
 }) {
@@ -798,7 +804,13 @@ function TaskDialog({
               <ArrowLeftIcon className="size-3.5" aria-hidden /> Other choices
             </button>
           ) : null}
-          <MoveForm ticket={ref} move={move} onDone={onDone} />
+          <MoveForm
+            ticket={ref}
+            move={move}
+            reasons={card.moves.filter((x) => x.within === move.to)}
+            handBack={move.to === "WONT_FIX" && card.assigneeId ? { developers: developers.filter((d) => d.id !== card.assigneeId) } : null}
+            onDone={onDone}
+          />
         </div>
       ) : (
         <div className="grid gap-2">

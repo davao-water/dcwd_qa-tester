@@ -11,13 +11,15 @@ const into = (status: TicketStatus, u: Actor) => (column: Parameters<typeof move
 
 describe("ticket board", () => {
   it("puts every status in exactly one column, in the order a ticket travels", () => {
-    expect(BOARD_COLUMNS.map((c) => c.key)).toEqual(["todo", "doing", "info", "fixed", "verified", "done"]);
+    expect(BOARD_COLUMNS.map((c) => c.key)).toEqual(["todo", "doing", "info", "fixed", "done"]);
     const placed = BOARD_COLUMNS.flatMap((c) => c.statuses);
     expect([...placed].sort()).toEqual([...TICKET_STATUSES].sort());
     expect(boardColumnOf("NEW")).toBe("todo");
     expect(boardColumnOf("REOPENED")).toBe("todo");
     expect(boardColumnOf("NEED_INFO")).toBe("info");
     expect(boardColumnOf("WONT_FIX")).toBe("done");
+    // Verified is no longer a step; tickets already Verified wait with the Fixed ones.
+    expect(boardColumnOf("VERIFIED")).toBe("fixed");
   });
 
   it("offers the move the workflow allows into each column", () => {
@@ -25,19 +27,18 @@ describe("ticket board", () => {
     expect(devOnNew("doing")).toEqual(["IN_PROGRESS"]);
     expect(devOnNew("fixed")).toEqual(["FIXED"]);
     expect(devOnNew("info")).toEqual(["NEED_INFO"]);
-    expect(devOnNew("verified")).toEqual([]);
-    // Several ways to end it, so the board asks which.
-    expect(devOnNew("done")).toEqual(["DUPLICATE", "WONT_FIX", "REJECTED"]);
+    // Several ways to end it, so the board asks which. Not a bug is a reason inside Won't fix, not a choice here.
+    expect(devOnNew("done")).toEqual(["DUPLICATE", "WONT_FIX"]);
     expect(devOnNew("todo")).toEqual([]);
 
-    expect(into("FIXED", qa)("verified")).toEqual(["VERIFIED"]);
+    // Verify and close: a fixed card dropped on Done.
+    expect(into("FIXED", qa)("done")).toEqual(["CLOSED"]);
     expect(into("FIXED", qa)("todo")).toEqual(["REOPENED"]);
     expect(into("VERIFIED", qa)("done")).toEqual(["CLOSED"]);
     expect(into("CLOSED", admin)("todo")).toEqual(["REOPENED"]);
     // Dragging back a column takes a mistaken move back.
     expect(into("IN_PROGRESS", dev)("todo")).toEqual(["NEW"]);
     expect(into("FIXED", dev)("doing")).toEqual(["IN_PROGRESS"]);
-    expect(into("VERIFIED", qa)("fixed")).toEqual(["FIXED"]);
     expect(into("REJECTED", dev)("doing")).toEqual(["IN_PROGRESS"]);
   });
 
@@ -51,9 +52,9 @@ describe("ticket board", () => {
   it("leaves the columns outside the chosen view empty, as the list does", () => {
     const inView = (group: "open" | "done" | "all", status: TicketStatus | "TO_START" | null = null) =>
       BOARD_COLUMNS.filter((c) => columnInView(c.key, { group, status })).map((c) => c.key);
-    expect(inView("open")).toEqual(["todo", "doing", "info", "fixed", "verified"]);
+    expect(inView("open")).toEqual(["todo", "doing", "info", "fixed"]);
     expect(inView("done")).toEqual(["done"]);
-    expect(inView("all")).toHaveLength(6);
+    expect(inView("all")).toHaveLength(5);
     expect(inView("open", "NEED_INFO")).toEqual(["info"]);
     expect(inView("open", "REOPENED")).toEqual(["todo"]);
     expect(inView("open", "TO_START")).toEqual(["todo"]);

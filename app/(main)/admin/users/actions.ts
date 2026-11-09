@@ -22,7 +22,7 @@ function duplicateEmail(e: unknown): UserFormState | null {
 
 export async function createUser(_prev: UserFormState, fd: FormData): Promise<UserFormState> {
   await requireAction("users.manage");
-  const parsed = userInput.safeParse({ name: text(fd, "name"), email: text(fd, "email"), role: text(fd, "role"), designer: fd.get("designer") === "on" });
+  const parsed = userInput.safeParse({ name: text(fd, "name"), email: text(fd, "email"), role: text(fd, "role"), designer: fd.get("designer") === "on", teamLead: fd.get("teamLead") === "on" });
   if (!parsed.success) return fromZodError(parsed.error);
 
   const tempPassword = generateTempPassword();
@@ -44,6 +44,7 @@ export async function updateUser(_prev: UserFormState, fd: FormData): Promise<Us
     email: text(fd, "email"),
     role: text(fd, "role"),
     designer: fd.get("designer") === "on",
+    teamLead: fd.get("teamLead") === "on",
     active: fd.get("active") === "on",
   });
   if (!parsed.success) return fromZodError(parsed.error);

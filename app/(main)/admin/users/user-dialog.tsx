@@ -16,7 +16,7 @@ import { initialFormState, type FormState } from "@/lib/form";
 import { NICKNAME_MAX } from "@/lib/schemas/user";
 import { createUser, resetPassword, signOutAllDevices, updateUser, type UserFormState } from "./actions";
 
-type UserValues = { id: string; name: string; email: string; role: Role; designer: boolean; active: boolean };
+type UserValues = { id: string; name: string; email: string; role: Role; designer: boolean; teamLead: boolean; active: boolean };
 
 export function UserDialog({ user, isSelf }: { user?: UserValues; isSelf?: boolean }) {
   return (
@@ -69,6 +69,15 @@ function UserForm({ user, isSelf, onDone }: { user?: UserValues; isSelf?: boolea
         <span>
           Designer
           <span className="block text-[12.5px] text-muted-foreground">Can send UI/UX designs for approval in Design reviews, on top of the role.</span>
+        </span>
+      </label>
+      <label className="flex items-start gap-2.5 text-sm">
+        <input type="checkbox" name="teamLead" defaultChecked={user?.teamLead} className="mt-0.5 size-4 accent-acc" />
+        <span>
+          Team Lead
+          <span className="block text-[12.5px] text-muted-foreground">
+            Can manage Team &amp; modules: add, edit, hide and delete modules and sub-modules, and set who works on each. Users stays admin-only.
+          </span>
         </span>
       </label>
       {user ? (

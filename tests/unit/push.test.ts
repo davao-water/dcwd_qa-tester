@@ -47,6 +47,13 @@ describe("pushMessage", () => {
     expect(pushMessage(reply("See these", 3, true), t).body.split("\n")[0]).toBe("Ana: See these 📷 3 photos 🎥 Video");
   });
 
+  it("tells QA a ticket was handed back, with the recommendation, and the reason only with previews on", () => {
+    const e = { kind: "handedBack" as const, recommended: "Cy", note: "It's in the payroll code" };
+    expect(pushMessage(e, t).body.split("\n")[0]).toBe("Ana handed it back to reassign. Recommends Cy. It's in the payroll code");
+    expect(pushMessage(e, { ...t, previews: false }).body.split("\n")[0]).toBe("Ana handed it back to reassign. Recommends Cy.");
+    expect(pushMessage({ kind: "handedBack", recommended: null }, t).body.split("\n")[0]).toBe("Ana handed it back to reassign.");
+  });
+
   it("with previews off shows no ticket text at all", () => {
     const m = pushMessage(reply("Account 0123-45 of Juan Dela Cruz"), { ...t, previews: false });
     expect(m.title).toBe("#12 · Bug");

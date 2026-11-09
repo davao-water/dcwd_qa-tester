@@ -12,7 +12,9 @@ export type PushEvent =
   | { kind: "assigned"; note?: string | null }
   | { kind: "reply"; text: string; photos: number; video: boolean }
   | { kind: "status"; to: TicketStatus; note?: string | null }
-  | { kind: "edited" };
+  | { kind: "edited" }
+  /** The developer handed it back to QA to reassign (Won't fix → another developer should take it). */
+  | { kind: "handedBack"; recommended: string | null; note?: string | null };
 
 /**
  * `tone` is the recipient's sound choice (see tones.ts) and `count` their unread tickets for the app icon, a number with no
@@ -49,6 +51,10 @@ export function pushMessage(e: PushEvent, t: PushTicket & { actorName: string; f
     line = `${a} marked it ${STATUS_LABELS[e.to]}${t.previews && e.note ? `: ${clip(e.note, LINE_MAX)}` : ""}`;
   } else if (e.kind === "edited") {
     line = `Edited by ${a}`;
+  } else if (e.kind === "handedBack") {
+    // The reason is ticket text, so it shows only with previews on; the recommended name always helps QA act.
+    const who = e.recommended ? ` Recommends ${e.recommended}.` : "";
+    line = `${a} handed it back to reassign.${who}${t.previews && e.note ? ` ${clip(e.note, LINE_MAX)}` : ""}`;
   } else {
     // A reassign reason ("Ben is on leave") is ticket text too, so it shows only with previews on.
     const why = e.kind === "assigned" && t.previews && e.note ? `: ${clip(e.note, LINE_MAX)}` : "";

@@ -1,5 +1,5 @@
 import "server-only";
-import { buildTree } from "@/lib/areas/tree";
+import { buildTree, type TreeNode } from "@/lib/areas/tree";
 import type { Role } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
 import type { AreaOption, AssigneeOption } from "./ticket-form";
@@ -9,18 +9,22 @@ export async function reporterOptions(): Promise<{ id: string; name: string; act
   return db.user.findMany({ where: { role: { in: ["QA", "ADMIN"] } }, orderBy: [{ active: "desc" }, { name: "asc" }], select: { id: true, name: true, active: true } });
 }
 
-/** Active modules and sub-modules, plus the developers and admins who can be assigned, with their areas. */
+/** An area and what's inside it, with only what the pickers need. */
+const toOption = (n: TreeNode<{ id: string; name: string }>): AreaOption => ({ id: n.id, name: n.name, children: n.children.map(toOption) });
+
+/** Active modules and sub-modules (every level), plus the developers and admins who can be assigned, with their areas. */
 export async function ticketFormOptions(): Promise<{ areas: AreaOption[]; people: AssigneeOption[] }> {
   const [areas, users] = await Promise.all([
     db.erpArea.findMany({ where: { active: true }, select: { id: true, parentId: true, name: true, sortOrder: true } }),
     db.user.findMany({
-      where: { active: true, role: { in: ["DEV", "ADMIN"] } },
+      // Only developers can be assigned; tickets already with an admin keep them until someone reassigns.
+      where: { active: true, role: "DEV" },
       orderBy: { name: "asc" },
       select: { id: true, name: true, role: true, areas: { select: { areaId: true, isLead: true } } },
     }),
   ]);
   return {
-    areas: buildTree(areas).map((m) => ({ id: m.id, name: m.name, children: m.children.map((c) => ({ id: c.id, name: c.name })) })),
+    areas: buildTree(areas).map(toOption),
     people: users.map((u) => ({
       id: u.id,
       name: u.name,
