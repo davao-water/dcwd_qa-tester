@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { addToAreas } from "@/lib/areas/assign";
 import { nextSortOrder, placementError } from "@/lib/areas/tree";
 import { requireAction } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { fromDbError, fromZodError, text, type FormState } from "@/lib/form";
-import { areaInput, areaMembersInput } from "@/lib/schemas/area";
+import { areaAssignInput, areaInput, areaMembersInput } from "@/lib/schemas/area";
 
 function duplicateCode(e: unknown): FormState | null {
   return (e as { code?: unknown } | null)?.code === "P2002"
@@ -84,6 +85,24 @@ export async function saveAreaMembers(_prev: FormState, fd: FormData): Promise<F
         data: [...new Set(members)].map((userId) => ({ areaId, userId, isLead: userId === lead, asDesigner: designers.includes(userId) })),
       }),
     ]);
+  } catch (e) {
+    return fromDbError(e);
+  }
+  revalidatePath("/team");
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/** Assign to modules: adds the ticked people to every ticked module and sub-module, keeping who is already there. */
+export async function assignToModules(_prev: FormState, fd: FormData): Promise<FormState> {
+  await requireAction("areas.manage");
+  const list = (name: string) => fd.getAll(name).filter((v): v is string => typeof v === "string");
+  const parsed = areaAssignInput.safeParse({ areaIds: list("area"), members: list("member"), lead: text(fd, "lead"), designers: list("designer") });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Please check the form." };
+
+  try {
+    const problem = await addToAreas(db, parsed.data);
+    if (problem) return { ok: false, message: problem };
   } catch (e) {
     return fromDbError(e);
   }

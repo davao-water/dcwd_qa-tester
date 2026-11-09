@@ -58,7 +58,7 @@ export default function MainLayout({ children }: LayoutProps<"/">) {
 
 async function sessionUser(): Promise<SidebarUser | null> {
   const u = await getCurrentUser();
-  return u ? { id: u.id, name: u.name, role: u.role, avatarColor: u.avatarColor, avatarName: u.avatarName } : null;
+  return u ? { id: u.id, name: u.name, role: u.role, grants: u.grants, avatarColor: u.avatarColor, avatarName: u.avatarName } : null;
 }
 
 async function SessionSidebar() {

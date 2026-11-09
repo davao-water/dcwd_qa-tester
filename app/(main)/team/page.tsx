@@ -19,7 +19,7 @@ import { db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { deleteArea } from "./actions";
 import { ModuleList } from "./module-list";
-import { AreaDialog, MembersDialog, type AreaValues, type PersonOption } from "./team-dialogs";
+import { AreaDialog, AssignDialog, MembersDialog, type AreaOption, type AreaValues, type PersonOption } from "./team-dialogs";
 
 export const metadata: Metadata = { title: "Team & modules" };
 
@@ -87,6 +87,15 @@ async function TeamBody({ searchParams }: { searchParams: Promise<SearchParams> 
   const modules = flatten(buildTree(rows))
     .filter((a) => canHaveChildren(rows, a.id))
     .map((a) => ({ id: a.id, name: pathTo(buildTree(rows), a.id).map((p) => p.name).join(" › ") }));
+  // Assign to modules: every module and sub-module, parents before what's inside them.
+  const areaOptions: AreaOption[] = flatten(buildTree(rows)).map((a) => ({
+    id: a.id,
+    name: a.name,
+    code: a.code,
+    depth: pathTo(buildTree(rows), a.id).length - 1,
+    inside: flatten(a.children).map((c) => c.id),
+    hidden: !a.active,
+  }));
   const toValues = (a: (typeof rows)[number]): AreaValues => ({
     id: a.id,
     name: a.name,
@@ -121,7 +130,14 @@ async function TeamBody({ searchParams }: { searchParams: Promise<SearchParams> 
       <PageHeader
         title="Team & modules"
         description="Who owns which part of the ERP. Find the right developer before filing a ticket."
-        actions={admin ? <AreaDialog modules={modules} /> : null}
+        actions={
+          admin ? (
+            <>
+              {areaOptions.length ? <AssignDialog people={people} areas={areaOptions} /> : null}
+              <AreaDialog modules={modules} />
+            </>
+          ) : null
+        }
       />
 
       {tree.length === 0 && person ? (

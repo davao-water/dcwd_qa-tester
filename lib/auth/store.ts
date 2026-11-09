@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import { dummyPasswordHash, hashPassword, verifyPassword } from "./password";
-import type { Role } from "./permissions";
+import type { GrantableAction, Role } from "./permissions";
+import { liveGrant } from "./temp-access";
 
 // Prisma glue for accounts and sessions. Takes the client as a parameter so tests can run it against a throwaway SQLite file.
 
@@ -9,7 +10,20 @@ export const SESSION_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 /** A session is pushed back to the full TTL once less than this is left, so active users stay signed in. */
 const SLIDE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type SessionUser = { id: string; name: string; email: string; role: Role; designer: boolean; teamLead: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null };
+export type SessionUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  designer: boolean;
+  teamLead: boolean;
+  mustChangePassword: boolean;
+  avatarColor: number;
+  avatarName: string | null;
+  /** Admin features lent to them for now (temporary access), and when that ends. Empty and null when there is none. */
+  grants: GrantableAction[];
+  grantsUntil: Date | null;
+};
 
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 export const newToken = () => randomBytes(32).toString("base64url");
@@ -18,7 +32,7 @@ export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 /** A sign-up's browser can get a new temporary password at most this often. */
 export const CLAIM_EVERY_MS = 60 * 1000;
 
-const userSelect = { id: true, name: true, email: true, role: true, designer: true, teamLead: true, mustChangePassword: true, active: true, avatarColor: true, avatarName: true } as const;
+const userSelect = { id: true, name: true, email: true, role: true, designer: true, teamLead: true, mustChangePassword: true, active: true, avatarColor: true, avatarName: true, tempAccess: { select: { actions: true, expiresAt: true } } } as const;
 
 export function authStore(db: PrismaClient, now: () => Date = () => new Date()) {
   /**
@@ -45,7 +59,7 @@ export function authStore(db: PrismaClient, now: () => Date = () => new Date()) 
       const user = await db.user.findUnique({ where: { email: normalizeEmail(email) }, select: { ...userSelect, passwordHash: true } });
       const ok = await verifyPassword(password, user?.passwordHash ?? (await dummyPasswordHash()));
       if (!user || !ok || !user.active) return null;
-      return toSessionUser(user);
+      return toSessionUser(user, now());
     },
 
     /**
@@ -202,7 +216,7 @@ export function authStore(db: PrismaClient, now: () => Date = () => new Date()) 
       if (s.expiresAt.getTime() - t < SLIDE_AFTER_MS) {
         await db.session.update({ where: { id }, data: { expiresAt: new Date(t + SESSION_TTL_MS) } });
       }
-      return toSessionUser(s.user);
+      return toSessionUser(s.user, new Date(t));
     },
 
     async deleteSession(token: string) {
@@ -248,6 +262,32 @@ export function authStore(db: PrismaClient, now: () => Date = () => new Date()) 
   };
 }
 
-function toSessionUser(u: { id: string; name: string; email: string; role: string; designer: boolean; teamLead: boolean; mustChangePassword: boolean; avatarColor: number; avatarName: string | null }): SessionUser {
-  return { id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, teamLead: u.teamLead, mustChangePassword: u.mustChangePassword, avatarColor: u.avatarColor, avatarName: u.avatarName };
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  designer: boolean;
+  teamLead: boolean;
+  mustChangePassword: boolean;
+  avatarColor: number;
+  avatarName: string | null;
+  tempAccess: { actions: string[]; expiresAt: Date } | null;
+};
+
+function toSessionUser(u: UserRow, now: Date): SessionUser {
+  const grant = liveGrant(u.tempAccess, now);
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role as Role,
+    designer: u.designer,
+    teamLead: u.teamLead,
+    mustChangePassword: u.mustChangePassword,
+    avatarColor: u.avatarColor,
+    avatarName: u.avatarName,
+    grants: grant?.actions ?? [],
+    grantsUntil: grant?.expiresAt ?? null,
+  };
 }

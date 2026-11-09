@@ -105,6 +105,24 @@ model User {
   lastActed          Ticket[]           @relation("TicketLastActivityBy")
   ticketReads        TicketRead[]
   pushSubscriptions  PushSubscription[]
+  tempAccess         TempAccess?        @relation("TempAccessUser")
+  tempAccessGiven    TempAccess[]       @relation("TempAccessGrantedBy")
+}
+
+/// Admin features an admin lent to this person for a few hours (Admin → Users → Temporary access). One per person;
+/// giving it again replaces it. Ignored once `expiresAt` has passed; the daily clean-up deletes it after that.
+model TempAccess {
+  userId      String   @id
+  user        User     @relation("TempAccessUser", fields: [userId], references: [id], onDelete: Cascade)
+  /// Permission names from GRANTABLE in lib/auth/permissions.ts.
+  actions     String[]
+  expiresAt   DateTime
+  grantedById String?
+  grantedBy   User?    @relation("TempAccessGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([grantedById])
 }
 
 /// A browser or phone that turned on device notifications (Web Push). One row per device; gone when it's turned off

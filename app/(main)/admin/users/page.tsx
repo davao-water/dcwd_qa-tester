@@ -13,14 +13,16 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ROLE_LABELS, ROLES, type Role } from "@/lib/auth/permissions";
+import { can, GRANT_LABELS, ROLE_LABELS, ROLES, type Role } from "@/lib/auth/permissions";
 import { requireAction } from "@/lib/auth/session";
+import { tempAccessStore, type TempGrant } from "@/lib/auth/temp-access";
 import { db } from "@/lib/db";
 import { formatDateTime, timeAgo } from "@/lib/format";
 import { filterUsers, STATUS_LABELS, userStatus, type UserStatus } from "@/lib/users/filter";
 import { cn } from "@/lib/utils";
 import { ApprovalHost, PendingActions, ResetRequestActions } from "./pending-actions";
 import { DeleteUserDialog } from "./delete-user-dialog";
+import { TempAccessDialog } from "./temp-access-dialog";
 import { ResetPasswordButton, SignOutDevicesButton, UserDialog } from "./user-dialog";
 
 export const metadata: Metadata = { title: "Users" };
@@ -33,6 +35,8 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const STATUS_TONE: Record<UserStatus, "ok" | "warn" | "neutral"> = { active: "ok", temp: "warn", off: "neutral" };
+
+const tempAccess = tempAccessStore(db);
 
 /** The table head, as on the board: uppercase on the table-head colour. Sticks to the top while rows scroll. */
 const HEAD = "sticky top-0 z-1 h-[3.125rem] bg-table-head px-3.5 text-left align-middle text-[0.7813rem] font-semibold tracking-[0.05em] text-navy uppercase first:rounded-l-lg last:rounded-r-lg";
@@ -51,11 +55,15 @@ const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "
 async function UsersBody({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   await connection();
-  const me = await requireAction("users.manage");
-  const tab: Tab = one(sp.tab) === "approval" ? "approval" : one(sp.tab) === "reset" ? "reset" : "users";
+  // Admins get every tab. Someone lent "Sign-ups & password requests" (temporary access) gets only those two tabs.
+  const me = await requireAction("users.requests");
+  const full = can(me, "users.manage");
+  const tabs = full ? TABS : TABS.filter((t) => t.key !== "users");
+  const wanted = one(sp.tab);
+  const tab: Tab = wanted === "approval" ? "approval" : wanted === "reset" ? "reset" : full ? "users" : "approval";
   const f = { q: one(sp.q).slice(0, 100), role: one(sp.role), module: one(sp.module), status: one(sp.status) };
 
-  const [requests, resets, users] = await Promise.all([
+  const [requests, resets, users, grants] = await Promise.all([
     db.user.findMany({
       where: { pending: true },
       orderBy: { createdAt: "asc" },
@@ -66,8 +74,9 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
       orderBy: { resetRequestedAt: "asc" },
       select: { id: true, name: true, email: true, role: true, active: true, resetRequestedAt: true },
     }),
+    // The account list is for admins only: someone with temporary access matches no rows.
     db.user.findMany({
-      where: { pending: false },
+      where: { pending: false, ...(full ? {} : { id: { in: [] } }) },
       orderBy: [{ active: "desc" }, { role: "asc" }, { name: "asc" }],
       select: {
         id: true,
@@ -81,6 +90,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
         areas: { select: { isLead: true, area: { select: AREA_PATH_SELECT } } },
       },
     }),
+    full ? tempAccess.live() : new Map<string, TempGrant>(),
   ]);
 
   // A sub-module counts for its top-level module in the Module filter.
@@ -96,12 +106,16 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
       <div className="grid gap-6 desk:flex desk:h-[calc(100dvh-12.5rem)] desk:min-h-112 desk:flex-col">
         <PageHeader
           title="Users"
-          description="Everyone who can sign in. People request an account on the sign-in page and get a temporary password there once you approve; accounts you add here get one from you."
-          actions={<UserDialog />}
+          description={
+            full
+              ? "Everyone who can sign in. People request an account on the sign-in page and get a temporary password there once you approve; accounts you add here get one from you."
+              : `Sign-ups and password requests, which an admin lent you until ${me.grantsUntil ? formatDateTime(me.grantsUntil) : "later today"}.`
+          }
+          actions={full ? <UserDialog /> : null}
         />
 
         <nav aria-label="User sections" className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line max-md:-mx-5 max-md:px-5 max-md:[scrollbar-width:none]">
-          {TABS.map((t) => {
+          {tabs.map((t) => {
             const on = tab === t.key;
             const waiting = t.key !== "users" && counts[t.key] > 0;
             return (
@@ -203,12 +217,15 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                       <th scope="col" className={cn(HEAD, "w-[11.875rem]")}>Role</th>
                       <th scope="col" className={HEAD}>Modules</th>
                       <th scope="col" className={cn(HEAD, "w-[11.875rem]")}>Status</th>
-                      <th scope="col" className={cn(HEAD, "w-[9.5rem]")}><span className="sr-only">Actions</span></th>
+                      <th scope="col" className={cn(HEAD, "w-[11.5rem]")}><span className="sr-only">Actions</span></th>
                     </tr>
                   </thead>
                   <tbody className="stagger">
                     {shown.map((u) => {
                       const status = userStatus(u);
+                      const grant = grants.get(u.id);
+                      // Admins already have every feature; a turned-off account can't sign in to use it.
+                      const lendable = u.id !== me.id && u.role !== "ADMIN" && u.active;
                       const cell = "border-b border-line2 px-3.5 py-2 align-middle";
                       return (
                         // Turned-off rows keep full contrast; the Status pill says it (the board's fade was too pale).
@@ -223,7 +240,13 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                               <StatusPill tone="neutral">{ROLE_LABELS[u.role as Role]}</StatusPill>
                               {u.designer ? <StatusPill tone="neutral">Designer</StatusPill> : null}
                               {u.teamLead ? <StatusPill tone="acc">Team Lead</StatusPill> : null}
+                              {grant ? (
+                                <span title={`Temporary access: ${grant.actions.map((a) => GRANT_LABELS[a].label).join(", ")}`}>
+                                  <StatusPill tone="warn">Temp access</StatusPill>
+                                </span>
+                              ) : null}
                             </span>
+                            {grant ? <span className="mt-1 block text-[0.75rem] text-muted-foreground">until {formatDateTime(grant.expiresAt)}</span> : null}
                           </td>
                           <td className={cn(cell, "text-[0.8438rem] text-body2")}>
                             {u.areas.length ? (
@@ -238,6 +261,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                           <td className={cell}>
                             <div className="flex justify-end gap-0.5">
                               <UserDialog user={{ id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, teamLead: u.teamLead, active: u.active }} isSelf={u.id === me.id} />
+                              {lendable ? <TempAccessDialog user={{ id: u.id, name: u.name }} current={grant ? { actions: grant.actions, until: formatDateTime(grant.expiresAt) } : null} /> : null}
                               {u.id !== me.id ? <ResetPasswordButton id={u.id} name={u.name} /> : null}
                               {u.id !== me.id ? <SignOutDevicesButton id={u.id} name={u.name} /> : null}
                               {u.id !== me.id ? <DeleteUserDialog user={{ id: u.id, name: u.name, email: u.email }} /> : null}

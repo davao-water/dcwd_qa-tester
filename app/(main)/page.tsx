@@ -21,10 +21,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { can, ROLE_LABELS, type Role } from "@/lib/auth/permissions";
+import { can, GRANT_LABELS, ROLE_LABELS, type Role } from "@/lib/auth/permissions";
 import { auth, requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { formatLongDate, greeting, shortAgo } from "@/lib/format";
+import { formatDateTime, formatLongDate, greeting, shortAgo } from "@/lib/format";
 import { notificationStore } from "@/lib/tickets/notifications";
 import { ticketStore } from "@/lib/tickets/store";
 import type { Actor } from "@/lib/tickets/workflow";
@@ -58,7 +58,7 @@ async function Overview({ searchParams }: { searchParams: SearchParams }) {
   const raw = (await searchParams).modules;
   const modulesParam = (Array.isArray(raw) ? raw[0] : raw) ?? "";
   const now = new Date();
-  const { signUps, resets } = can(me, "users.manage") ? await auth.adminRequests() : { signUps: 0, resets: 0 };
+  const { signUps, resets } = can(me, "users.requests") ? await auth.adminRequests() : { signUps: 0, resets: 0 };
   const waiting = [
     signUps ? `${signUps} ${plural(signUps, "sign-up", "sign-ups")}` : null,
     resets ? `${resets} password reset ${plural(resets, "request", "requests")}` : null,
@@ -94,6 +94,11 @@ async function Overview({ searchParams }: { searchParams: SearchParams }) {
           </Button>
         ) : null}
       </div>
+      {me.grants.length && me.grantsUntil ? (
+        <InlineAlert tone="info" role="status">
+          An admin lent you {me.grants.map((a) => GRANT_LABELS[a].label).join(", ")} until {formatDateTime(me.grantsUntil)}. It ends by itself.
+        </InlineAlert>
+      ) : null}
       {waiting.length ? (
         <InlineAlert tone="info" role="status">
           {waiting.join(" and ")} {plural(signUps + resets, "is", "are")} waiting for you.{" "}

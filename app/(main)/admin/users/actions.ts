@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { generateTempPassword } from "@/lib/auth/password";
+import { can } from "@/lib/auth/permissions";
 import { auth, requireAction } from "@/lib/auth/session";
+import { TempAccessError, tempAccessStore } from "@/lib/auth/temp-access";
 import { db } from "@/lib/db";
 import { fromDbError, fromZodError, text, type FormState } from "@/lib/form";
 import { userInput, userUpdateInput } from "@/lib/schemas/user";
@@ -96,7 +98,7 @@ export async function deleteUser(_prev: FormState, fd: FormData): Promise<FormSt
  * the sign-in page. One made before that gets a one-time temporary password, returned for the admin to hand over.
  */
 export async function approveSignUp(id: string): Promise<UserFormState> {
-  await requireAction("users.manage");
+  await requireAction("users.requests");
   const user = await db.user.findUnique({ where: { id }, select: { email: true } });
   const result = user ? await auth.approveSignUp(id, () => generateTempPassword()) : null;
   if (!user || !result) return { ok: false, message: "This request was already handled. Refresh the page." };
@@ -106,18 +108,25 @@ export async function approveSignUp(id: string): Promise<UserFormState> {
 }
 
 export async function rejectSignUp(id: string): Promise<FormState> {
-  await requireAction("users.manage");
+  await requireAction("users.requests");
   if (!(await auth.rejectSignUp(id))) return { ok: false, message: "This request was already handled. Refresh the page." };
   revalidatePath("/admin/users");
   revalidatePath("/");
   return { ok: true };
 }
 
+/**
+ * Admins reset anyone's password. Someone lent "Sign-ups & password requests" resets only people who asked for it on
+ * the sign-in page, and never an admin's.
+ */
 export async function resetPassword(id: string): Promise<UserFormState> {
-  const me = await requireAction("users.manage");
+  const me = await requireAction("users.requests");
   if (id === me.id) return { ok: false, message: "Change your own password in My account." };
-  const user = await db.user.findUnique({ where: { id }, select: { email: true } });
+  const user = await db.user.findUnique({ where: { id }, select: { email: true, role: true, resetRequestedAt: true } });
   if (!user) return { ok: false, message: "The user no longer exists. Refresh the page." };
+  if (!can(me, "users.manage") && (!user.resetRequestedAt || user.role === "ADMIN")) {
+    return { ok: false, message: "Only an admin can reset this password." };
+  }
 
   const tempPassword = generateTempPassword();
   await auth.setPassword(id, tempPassword, true);
@@ -141,9 +150,34 @@ export async function signOutAllDevices(id: string): Promise<FormState> {
 
 /** Removes a forgot-password request without resetting, e.g. when the person remembered their password. */
 export async function dismissResetRequest(id: string): Promise<FormState> {
-  await requireAction("users.manage");
+  await requireAction("users.requests");
   if (!(await auth.clearResetRequest(id))) return { ok: false, message: "This request was already handled. Refresh the page." };
   revalidatePath("/admin/users");
   revalidatePath("/");
+  return { ok: true };
+}
+
+const tempAccess = tempAccessStore(db);
+
+/** Admin → Users → Temporary access: lends the ticked admin features for 1–72 hours. Real admins only. */
+export async function giveTempAccess(_prev: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireAction("users.manage");
+  const hours = Number(text(fd, "hours"));
+  const actions = fd.getAll("feature").filter((v): v is string => typeof v === "string");
+  try {
+    await tempAccess.give(me.id, { userId: text(fd, "userId"), actions, hours });
+  } catch (e) {
+    if (e instanceof TempAccessError) return { ok: false, message: e.message };
+    throw e;
+  }
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/** Ends someone's temporary access now. */
+export async function endTempAccess(userId: string): Promise<FormState> {
+  await requireAction("users.manage");
+  if (!(await tempAccess.end(userId))) return { ok: false, message: "It had already ended. Refresh the page." };
+  revalidatePath("/admin/users");
   return { ok: true };
 }

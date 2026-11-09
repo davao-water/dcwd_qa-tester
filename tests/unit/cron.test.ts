@@ -48,7 +48,7 @@ describe("dailyCleanup", () => {
 
     const r = await dailyCleanup(db, now);
     expect(r.staleFiles).toEqual([`2026/10/${"a".repeat(32)}.png`]);
-    expect(r.removed).toEqual({ uploads: 1, sessions: 1, rateLimitHits: 1 });
+    expect(r.removed).toEqual({ uploads: 1, sessions: 1, rateLimitHits: 1, tempAccess: 0 });
     expect(await db.pendingUpload.count()).toBe(1);
     expect((await db.session.findMany()).map((s) => s.id)).toEqual(["live"]);
     expect((await db.rateLimitHit.findMany()).map((h) => h.key)).toEqual(["login:y"]);

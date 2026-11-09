@@ -129,6 +129,16 @@ missed*, so a night with the laptop off is caught up the next morning. Check `ba
 - **Designer:** a tick-box on any account (Admin → Users → edit). It lets that person send UI/UX designs for approval
   in **Design reviews**, on top of their role (e.g. a QA tester who also designs). Admins and the Team page show a
   *Designer* badge.
+- **Temporary access** (the timer icon in Admin → Users, admins only): lend a QA tester or developer some admin
+  features for 1 to 72 hours, for example while you're on leave. Tick what they get:
+  - **Sign-ups & password requests:** the Approval and Password reset tabs. They can reset a password only for
+    someone who asked for it, and never an admin's.
+  - **Team & modules:** add modules and choose who works on each, like a Team Lead.
+  - **All tickets:** every ticket shows in their tabs, as it does for admins.
+
+  It ends by itself at the time shown on their row, with nothing to undo. **End now** stops it early, and giving it
+  again replaces it. Adding, editing or deleting accounts and changing roles always stays with admins, so nobody can
+  make themselves a permanent admin. The person sees what they've been lent, and until when, on their dashboard.
 - **Handing the admin role over:** create the new admin's account (role Admin), let them sign in and change the
   temporary password, then they edit your account to your new role (e.g. QA tester, with Designer ticked).
 - **Failed sign-ins:** after 5 failed sign-ins in 15 minutes, that email is locked out for the rest of the window.
