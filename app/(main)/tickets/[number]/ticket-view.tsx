@@ -35,13 +35,11 @@ import {
 import { cn } from "@/lib/utils";
 import { ticketFormOptions } from "../options";
 import { LevelLabel, TicketStatusPill, TicketTypeLabel } from "../ticket-bits";
-import {
-  AssignControl,
-  CategoryControl,
-  CommentForm,
-  StatusMoves,
-  TicketMoreMenu,
-} from "./ticket-controls";
+import { AssignControl } from "./_controls/assign-control";
+import { CategoryControl } from "./_controls/category-control";
+import { CommentForm } from "./_controls/comment-form";
+import { TicketMoreMenu } from "./_controls/more-menu";
+import { StatusMoves } from "./_controls/status-moves";
 import { TicketFlow } from "./ticket-flow";
 import { TicketPane, TicketTabs } from "./ticket-tabs";
 
