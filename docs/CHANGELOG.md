@@ -7,6 +7,8 @@ No change to what the app does.
 - The ticket store (`lib/tickets/store.ts`) is split into changes, the list and board, other reads, and files waiting
   to be attached. `ticketStore(db)` gives the same methods as before.
 - The DAR import (`lib/dar/import.ts`) is split into reading the Excel file, reading one DAR sheet, and combining them.
+- The dashboard (`app/(main)/page.tsx`) is split into `app/(main)/_home/`: the admin home, the tester and developer
+  home, the number cards and the ticket list each have a file.
 
 ## Clean-up: the tickets folder, one job per file (2026-11-10)
 
