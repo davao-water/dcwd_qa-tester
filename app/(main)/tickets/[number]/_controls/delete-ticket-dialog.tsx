@@ -8,7 +8,7 @@ import { initialFormState } from "@/lib/form";
 import { Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 import { deleteTicket } from "../../actions";
-import { submitKeepingInput } from "../../ticket-form";
+import { submitKeepingInput } from "@/components/submit-keeping-input";
 
 /**
  * Permanent delete, the way GitHub deletes a repository: a red danger box spelling out what goes, and the button

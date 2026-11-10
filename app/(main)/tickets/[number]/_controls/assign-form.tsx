@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { initialFormState, type FormState } from "@/lib/form";
 import { useActionState, useState } from "react";
 import { assignTicket } from "../../actions";
-import { AssigneeSelect, submitKeepingInput, type AreaOption, type AssigneeOption } from "../../ticket-form";
+import { AssigneeSelect } from "../../_form/assignee-select";
+import { submitKeepingInput } from "@/components/submit-keeping-input";
+import type { AreaOption, AssigneeOption } from "../../_form/types";
 import type { Ref } from "./ticket-ref";
 
 /** The developer picker, with an optional reason when reassigning. Also the board's Assign dialog. */

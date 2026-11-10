@@ -9,7 +9,7 @@ import { initialFormState, type FormState } from "@/lib/form";
 import type { TicketStatus, Transition } from "@/lib/tickets/workflow";
 import { useActionState, useState } from "react";
 import { handBackTicket, moveTicket } from "../../actions";
-import { submitKeepingInput } from "../../ticket-form";
+import { submitKeepingInput } from "@/components/submit-keeping-input";
 import type { Ref } from "./ticket-ref";
 
 const NOTE_HINTS: Partial<Record<TicketStatus, string>> = {

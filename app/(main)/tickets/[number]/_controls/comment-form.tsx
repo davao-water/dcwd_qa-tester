@@ -12,7 +12,7 @@ import { addComment } from "../../actions";
 import { AttachMenu } from "../../attach-menu";
 import { useImageAttachments } from "../../_images/use-image-attachments";
 import { ImagePicker } from "../../image-picker";
-import { submitKeepingInput } from "../../ticket-form";
+import { submitKeepingInput } from "@/components/submit-keeping-input";
 import { useVideoUpload, VideoPicker } from "../../video-picker";
 import type { Ref } from "./ticket-ref";
 

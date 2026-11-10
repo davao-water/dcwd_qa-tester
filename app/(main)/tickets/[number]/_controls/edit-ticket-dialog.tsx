@@ -2,7 +2,8 @@
 
 import { FormDialog } from "@/components/form-dialog";
 import { Button } from "@/components/ui/button";
-import { TicketForm, type AreaOption, type AssigneeOption, type TicketValues } from "../../ticket-form";
+import { TicketForm } from "../../ticket-form";
+import type { AreaOption, AssigneeOption, TicketValues } from "../../_form/types";
 
 /** Edit the ticket's details in a dialog, with the same form as New ticket. */
 export function EditTicketDialog({

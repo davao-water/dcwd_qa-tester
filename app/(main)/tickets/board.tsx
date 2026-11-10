@@ -13,7 +13,7 @@ import {
 } from "@/lib/tickets/board";
 import type { Transition } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import type { AreaOption, AssigneeOption } from "./ticket-form";
+import type { AreaOption, AssigneeOption } from "./_form/types";
 import { Card } from "./_board/card";
 import { ColumnTabs } from "./_board/column-tabs";
 import { TaskDialog } from "./_board/task-dialog";

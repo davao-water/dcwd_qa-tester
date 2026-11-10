@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRightLeftIcon } from "lucide-react";
 import { useState } from "react";
-import type { AreaOption, AssigneeOption } from "../../ticket-form";
+import type { AreaOption, AssigneeOption } from "../../_form/types";
 import { AssignForm } from "./assign-form";
 import type { Ref } from "./ticket-ref";
 

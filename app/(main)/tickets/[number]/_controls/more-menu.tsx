@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Menu } from "@base-ui/react/menu";
 import { EllipsisIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
-import type { AreaOption, AssigneeOption, TicketValues } from "../../ticket-form";
+import type { AreaOption, AssigneeOption, TicketValues } from "../../_form/types";
 import { DeleteTicketDialog } from "./delete-ticket-dialog";
 import { EditTicketDialog } from "./edit-ticket-dialog";
 

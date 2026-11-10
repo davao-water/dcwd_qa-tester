@@ -7,7 +7,7 @@ import { STATUS_LABELS, type Transition } from "@/lib/tickets/workflow";
 import { AssignForm } from "../[number]/_controls/assign-form";
 import { MoveForm } from "../[number]/_controls/move-form";
 import { TicketStatusPill } from "../ticket-bits";
-import type { AreaOption, AssigneeOption } from "../ticket-form";
+import type { AreaOption, AssigneeOption } from "../_form/types";
 import type { Task } from "./types";
 
 /** The dialog for a dropped card or a menu choice: pick the move if there are several, then its note; or assign. */
