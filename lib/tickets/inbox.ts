@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { notificationStore } from "@/lib/tickets/notifications";
-import { scopeWhere } from "@/lib/tickets/store";
+import { scopeWhere } from "@/lib/tickets/scope";
 import { STATUS_LABELS, type Actor, type TicketStatus } from "@/lib/tickets/workflow";
 
 // My inbox (Messenger-style): one conversation per ticket the person can see, newest activity first, with a preview of
