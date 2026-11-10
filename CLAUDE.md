@@ -45,6 +45,23 @@ Build **one phase at a time**, start in plan mode, and stop for review at the en
    500 MB of database, one Vercel cron run per day. Supabase Free has no backups: `npm run backup` runs nightly on the
    QA laptop.
 
+## Keep it organized (so a beginner can read it)
+A beginner must be able to open any folder and understand it. The plain-words tour is `docs/FOLDERS.md`.
+- **Screens go in pages** → `app/`. Next.js only finds screens there, so "pages" means `app/`. Never create a
+  top-level `pages/` folder: it switches on Next.js's old router.
+- **Shared pieces go in components** → `components/` (used by two or more screens; `components/ui/` holds the
+  library-generated building blocks). A piece used by only one screen sits next to that screen in `app/`.
+- **Saving and loading goes in data** → `lib/` (database reads and writes, uploads, validation, rules). `data/` holds
+  only static data files such as `erp-areas.json`.
+- **One job per file.** If you need "and" to say what a file does, split it.
+- **No file over 300 lines** (counted with `wc -l`). Library files we don't write by hand (`components/ui/*` from
+  shadcn, Prisma's generated client) are the only exceptions.
+- **Before writing anything new, check if it already exists**: search `components/`, `hooks/` and `lib/` (and run
+  `graphify query` when the graph exists). Reuse or extend it instead of making a second copy.
+- **Clean-ups change no behaviour.** Tidy one folder at a time, with lint, the type check and the tests green before
+  and after, and stop for review after each folder. Save point before these rules: commit `1e21774` (local tag
+  `save-point-before-rules`).
+
 ## Conventions
 - `lib/` holds framework-free logic (auth, areas, tickets, uploads, dar, backup, cron). `app/` holds UI and route
   handlers only.
