@@ -5,7 +5,9 @@ import { CameraIcon, FilmIcon, ImagePlusIcon, MonitorIcon, PaperclipIcon } from 
 import { Button } from "@/components/ui/button";
 import { useTouchScreen } from "@/hooks/use-touch-screen";
 import { IMAGE_MAX_BYTES, MAX_IMAGES_PER_POST, VIDEO_MAX_MB } from "@/lib/uploads/limits";
-import { cameraInputId, useCanCapture, type ImageAttachments } from "./image-picker";
+import { useCanCapture } from "./_images/capture";
+import type { ImageAttachments } from "./_images/use-image-attachments";
+import { cameraInputId } from "./image-picker";
 import type { VideoUpload } from "./video-picker";
 
 // The reply box's one button for files. It opens the pickers' hidden inputs; what gets attached shows above it.

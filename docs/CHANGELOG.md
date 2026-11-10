@@ -1,5 +1,15 @@
 # Changelog
 
+## Clean-up: the tickets folder, one job per file (2026-11-10)
+
+No change to what the app does. Rules for keeping the code beginner-readable are in `CLAUDE.md`, and
+`docs/FOLDERS.md` explains every folder in plain words.
+
+- The seven ticket files over 300 lines (list page, board, ticket controls, markup editor, ticket form, ticket view,
+  image picker) are split into small files in private `_` folders beside them. No file in `app/(main)/tickets` is over
+  300 lines now.
+- `submitKeepingInput` is shared by tickets and My DAR, so it moved to `components/submit-keeping-input.ts`.
+
 ## Fix: the ticket filters show the module picked on the dashboard (2026-11-09)
 
 - Clicking a module on the dashboard filtered the ticket list, but the Module filter could still show the earlier

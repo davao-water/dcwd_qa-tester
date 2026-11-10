@@ -2,7 +2,7 @@ import "server-only";
 import { buildTree, type TreeNode } from "@/lib/areas/tree";
 import type { Role } from "@/lib/auth/permissions";
 import { db } from "@/lib/db";
-import type { AreaOption, AssigneeOption } from "./ticket-form";
+import type { AreaOption, AssigneeOption } from "./_form/types";
 
 /** Everyone who files tickets (QA testers and admins), for the QA tester filter. Inactive people keep their tickets, so they are listed too. */
 export async function reporterOptions(): Promise<{ id: string; name: string; active: boolean }[]> {

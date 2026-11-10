@@ -8,7 +8,7 @@ import { PERIOD_SCHEMES, SCHEME_LABELS, type PeriodScheme } from "@/lib/dar/peri
 import type { DarHeader } from "@/lib/dar/template";
 import { initialFormState } from "@/lib/form";
 import { cn } from "@/lib/utils";
-import { submitKeepingInput } from "../../tickets/ticket-form";
+import { submitKeepingInput } from "@/components/submit-keeping-input";
 import { saveDarProfile } from "../actions";
 import { FunctionsEditor, type DarAreaOption } from "../functions-editor";
 import { FirstPeriodField } from "./first-period-field";

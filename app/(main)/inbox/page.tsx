@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { Message, Thread, galleryImages } from "../tickets/[number]/conversation";
 import { ImageGallery } from "../tickets/[number]/image-viewer";
 import { MarkRead } from "../tickets/[number]/mark-read";
-import { CommentForm } from "../tickets/[number]/ticket-controls";
+import { CommentForm } from "../tickets/[number]/_controls/comment-form";
 import { SeverityTag, TicketStatusPill, TicketTypeLabel, UnreadDot } from "../tickets/ticket-bits";
 import { ScrollToLatest } from "@/components/scroll-to-latest";
 
