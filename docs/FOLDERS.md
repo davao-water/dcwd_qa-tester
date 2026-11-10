@@ -34,3 +34,17 @@ A screen folder keeps its own small pieces right next to it. For example `app/(m
   address, like `/tickets/42`).
 - `actions.ts` holds the buttons' "save this" jobs (Server Actions), which hand the work to `lib/tickets/`.
 - Other files are pieces only the tickets screens use. If another screen ever needs one, it moves to `components/`.
+
+**Folders that start with `_`** (like `_list/`, `_board/`, `_form/`, `_images/`) are a screen's private drawers. The
+underscore tells Next.js "this is not a web address", so nothing in there becomes a page. Each drawer holds the small
+one-job files a big screen was split into:
+
+| Drawer | What's inside |
+|---|---|
+| `tickets/_list/` | The pieces of the tickets list: tabs, filters, table, pager, the board's columns |
+| `tickets/_board/` | The board's pieces: a card, its ⋯ menu, the column tabs, the move dialog, drag-and-drop with Undo |
+| `tickets/_form/` | The New ticket / Edit form's pieces: type picker, details fields, draft saving |
+| `tickets/_images/` | Adding screenshots: the upload hook and screen capture |
+| `tickets/[number]/_controls/` | The buttons and forms on one ticket: moves, assign, category, reply, edit, delete |
+| `tickets/[number]/_view/` | One ticket's layout: the header, the details card, the conversation, the activity log |
+| `tickets/markup/` | The screenshot markup editor, split into hooks: marks, zoom, pointer, keys |

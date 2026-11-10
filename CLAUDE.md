@@ -53,7 +53,9 @@ A beginner must be able to open any folder and understand it. The plain-words to
   library-generated building blocks). A piece used by only one screen sits next to that screen in `app/`.
 - **Saving and loading goes in data** → `lib/` (database reads and writes, uploads, validation, rules). `data/` holds
   only static data files such as `erp-areas.json`.
-- **One job per file.** If you need "and" to say what a file does, split it.
+- **One job per file.** If you need "and" to say what a file does, split it. A big screen's pieces go in a private
+  folder beside it whose name starts with `_` (`tickets/_list/`, `tickets/[number]/_controls/`): Next.js never turns
+  an `_` folder into a web address.
 - **No file over 300 lines** (counted with `wc -l`). Library files we don't write by hand (`components/ui/*` from
   shadcn, Prisma's generated client) are the only exceptions.
 - **Before writing anything new, check if it already exists**: search `components/`, `hooks/` and `lib/` (and run
