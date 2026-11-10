@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { createTicket, editTicket } from "./actions";
 import { EVIDENCE_BOX, EVIDENCE_INPUT, EvidenceBox } from "./evidence-box";
 import { levelDot, TYPE_ICON, TypeTile, typeStyle } from "./ticket-bits";
-import { useImageAttachments } from "./image-picker";
+import { useImageAttachments } from "./_images/use-image-attachments";
 import { useVideoUpload } from "./video-picker";
 
 /** A module with what's inside it, at every level (lib/areas/tree.ts). */
