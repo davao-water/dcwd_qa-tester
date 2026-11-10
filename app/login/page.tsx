@@ -134,7 +134,7 @@ function BrandText() {
   );
 }
 
-/** Below the lg breakpoint the brand pane is hidden, so the form carries a small seal and name instead. */
+/** Below the lg breakpoint the brand pane is hidden, so the form carries a small seal and name insd. */
 function MobileBrand() {
   return (
     <div className="mb-8 flex items-center gap-3 lg:hidden">
