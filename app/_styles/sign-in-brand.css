@@ -1,0 +1,140 @@
+/* The sign-in page's brand panel: ripples, waves and its entrance. Imported, in order, by app/globals.css. */
+
+/* Sign-in brand pane, from the DCWD Careers design (careers-static.css / careers-motion.css).
+   Its colours are DCWD indigo in both modes (not the user's accent), so they live here as pane tokens with a dark set. */
+.auth-brand {
+  /* The emblem's disc and the preloader's water. */
+  --ab-emblem: #4f56d3;
+  --ab-emblem-deep: #1e2a78;
+  --ab-bg: #eef2fd;
+  --ab-ink: #1e2a78;
+  --ab-eyebrow: #5b63c7;
+  --ab-text: #525a8c;
+  --ab-foot: #4a5290;
+  --ab-glow: #ffffff;
+  --ab-ring-1: #bcc6f1;
+  --ab-ring-2: #cbd3f4;
+  --ab-ring-3: #d8def7;
+  --ab-ring-4: #e2e7f9;
+  --ab-ripple: rgba(110, 124, 222, 0.55);
+  --ab-seal-shadow: 0 18px 50px rgba(40, 52, 140, 0.16), 0 0 0 8px rgba(255, 255, 255, 0.6);
+  --ab-chip-bg: rgba(255, 255, 255, 0.75);
+  --ab-chip-line: #dde3f7;
+  --ab-chip-ink: #2a3170;
+  --ab-chip-icon: #4f56d3;
+  --ab-wave-1: #e2e8fb;
+  --ab-wave-2: #d4ddf8;
+  --ab-wave-3: #c7d2f5;
+}
+.dark .auth-brand {
+  --ab-bg: #121833;
+  --ab-ink: #e6e9fb;
+  --ab-eyebrow: #9aa3f0;
+  --ab-text: #aab0d6;
+  --ab-foot: #99a0cf; /* 5.1:1 over the front wave, which the footer crosses */
+  --ab-glow: rgba(120, 132, 230, 0.22);
+  --ab-ring-1: #34407a;
+  --ab-ring-2: #2d376b;
+  --ab-ring-3: #27305e;
+  --ab-ring-4: #222a53;
+  --ab-ripple: rgba(140, 152, 240, 0.45);
+  --ab-seal-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 0 8px rgba(255, 255, 255, 0.08);
+  --ab-chip-bg: rgba(255, 255, 255, 0.06);
+  --ab-chip-line: #2d376b;
+  --ab-chip-ink: #d5d9f5;
+  --ab-chip-icon: #9aa3f0;
+  --ab-wave-1: #19214a;
+  --ab-wave-2: #1d2756;
+  --ab-wave-3: #222d63;
+}
+/* The sign-in brand panel and the preloader in the theme colour someone picked (data-accent; the default indigo keeps the
+   values above). Built from the colour the same way the indigo palette relates to #4f56d3. */
+html[data-accent] .auth-brand {
+  --ab-emblem: var(--acc-base);
+  --ab-emblem-deep: color-mix(in srgb, var(--acc-base) 50%, #0b1030);
+  --ab-bg: color-mix(in srgb, var(--acc-base) 8%, #ffffff);
+  --ab-ink: color-mix(in srgb, var(--acc-base) 45%, #10142e);
+  --ab-eyebrow: color-mix(in srgb, var(--acc-base) 85%, #ffffff);
+  --ab-text: color-mix(in srgb, var(--acc-base) 30%, #3a3f55);
+  --ab-foot: color-mix(in srgb, var(--acc-base) 38%, #33384f);
+  --ab-ring-1: color-mix(in srgb, var(--acc-base) 30%, #ffffff);
+  --ab-ring-2: color-mix(in srgb, var(--acc-base) 24%, #ffffff);
+  --ab-ring-3: color-mix(in srgb, var(--acc-base) 18%, #ffffff);
+  --ab-ring-4: color-mix(in srgb, var(--acc-base) 14%, #ffffff);
+  --ab-ripple: color-mix(in srgb, var(--acc-base) 55%, transparent);
+  --ab-seal-shadow: 0 18px 50px color-mix(in srgb, var(--acc-base) 18%, transparent), 0 0 0 8px rgba(255, 255, 255, 0.6);
+  --ab-chip-line: color-mix(in srgb, var(--acc-base) 16%, #ffffff);
+  --ab-chip-ink: color-mix(in srgb, var(--acc-base) 45%, #10142e);
+  --ab-chip-icon: var(--acc-base);
+  --ab-wave-1: color-mix(in srgb, var(--acc-base) 11%, #ffffff);
+  --ab-wave-2: color-mix(in srgb, var(--acc-base) 17%, #ffffff);
+  --ab-wave-3: color-mix(in srgb, var(--acc-base) 23%, #ffffff);
+}
+html.dark[data-accent] .auth-brand {
+  --ab-bg: color-mix(in srgb, var(--acc-base) 16%, #0c0e1a);
+  --ab-ink: color-mix(in srgb, var(--acc-base) 10%, #ffffff);
+  --ab-eyebrow: color-mix(in srgb, var(--acc-base) 55%, #ffffff);
+  --ab-text: color-mix(in srgb, var(--acc-base) 25%, #c4c7d6);
+  --ab-foot: color-mix(in srgb, var(--acc-base) 30%, #b8bccd);
+  --ab-glow: color-mix(in srgb, var(--acc-base) 24%, transparent);
+  --ab-ring-1: color-mix(in srgb, var(--acc-base) 42%, #0c0e1a);
+  --ab-ring-2: color-mix(in srgb, var(--acc-base) 35%, #0c0e1a);
+  --ab-ring-3: color-mix(in srgb, var(--acc-base) 29%, #0c0e1a);
+  --ab-ring-4: color-mix(in srgb, var(--acc-base) 24%, #0c0e1a);
+  --ab-ripple: color-mix(in srgb, color-mix(in srgb, var(--acc-base) 70%, #ffffff) 45%, transparent);
+  --ab-seal-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 0 8px rgba(255, 255, 255, 0.08);
+  --ab-chip-bg: rgba(255, 255, 255, 0.06);
+  --ab-chip-line: color-mix(in srgb, var(--acc-base) 35%, #0c0e1a);
+  --ab-chip-ink: color-mix(in srgb, var(--acc-base) 18%, #ffffff);
+  --ab-chip-icon: color-mix(in srgb, var(--acc-base) 55%, #ffffff);
+  --ab-wave-1: color-mix(in srgb, var(--acc-base) 22%, #0c0e1a);
+  --ab-wave-2: color-mix(in srgb, var(--acc-base) 27%, #0c0e1a);
+  --ab-wave-3: color-mix(in srgb, var(--acc-base) 32%, #0c0e1a);
+}
+.auth-brand .rg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border: 1px solid var(--ab-ring-2);
+  transform: translate(-50%, -50%);
+}
+.auth-brand .rip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14.75rem;
+  height: 14.75rem;
+  margin: -7.375rem 0 0 -7.375rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--ab-ripple);
+  opacity: 0;
+  animation: auth-ripple 7.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+.auth-brand .rip:nth-child(2) { animation-delay: 1.8s; }
+.auth-brand .rip:nth-child(3) { animation-delay: 3.6s; }
+.auth-brand .rip:nth-child(4) { animation-delay: 5.4s; }
+.auth-brand .seal { animation: auth-float 6.4s ease-in-out infinite; }
+/* 4000 px wide at true scale; the shape repeats every 800 px (a rise and a fall, wavePath in components/preloader.tsx),
+   exactly how far auth-drift slides it, so the loop has no jump. */
+.auth-brand .wave { position: absolute; left: 0; bottom: 0; width: 4000px; max-width: none; height: 220px; }
+.auth-brand .w1 { animation: auth-drift 26s linear infinite; }
+.auth-brand .w2 { animation: auth-drift 18s linear infinite reverse; }
+.auth-brand .w3 { animation: auth-drift 12s linear infinite; }
+.auth-enter > * { animation: auth-rise 560ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.auth-enter > *:nth-child(2) { animation-delay: 60ms; }
+.auth-enter > *:nth-child(3) { animation-delay: 110ms; }
+.auth-enter > *:nth-child(4) { animation-delay: 160ms; }
+.auth-enter > *:nth-child(5) { animation-delay: 210ms; }
+.auth-enter > *:nth-child(n + 6) { animation-delay: 260ms; }
+@keyframes auth-ripple { 0% { transform: scale(0.72); opacity: 0; } 8% { opacity: 0.85; } 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes auth-float { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -8px, 0); } }
+@keyframes auth-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-800px, 0, 0); } }
+@keyframes auth-rise { from { opacity: 0; transform: translate3d(0, 14px, 0); } to { opacity: 1; transform: none; } }
+/* The active Sign in / Sign up pill pops in when you switch tabs. */
+.auth-tab-on { animation: auth-tab-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes auth-tab-pop { from { transform: scale(0.94); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .auth-brand .rip { display: none; }
+  .auth-brand .seal, .auth-brand .w1, .auth-brand .w2, .auth-brand .w3, .auth-enter > *, .auth-tab-on { animation: none; }
+}

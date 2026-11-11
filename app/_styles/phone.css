@@ -1,0 +1,35 @@
+/* Phones: the app look (grey page, rounded cards, room for the bottom bar). Imported, in order, by app/globals.css. */
+
+/* Phones (below md): an app look. A grey page with rounded white cards, the end of the page kept clear of the bottom
+   tab bar (components/bottom-nav.tsx) and the home bar, and the top clear of the notch on pages without a top bar. */
+@media (width < 48rem) {
+  body,
+  [data-slot="sidebar-inset"] {
+    background: var(--grouped);
+  }
+  body:has([data-bottom-nav]) [data-main] {
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+  /* Inner pages: the slim top bar names the page, so the large title goes (and the whole header when it has no buttons). */
+  body:not(:has([data-bottom-nav])) [data-page-title] {
+    display: none;
+  }
+  body:not(:has([data-bottom-nav])) [data-page-header]:not(:has(> :nth-child(2))) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton-shine::after {
+    display: none;
+  }
+}

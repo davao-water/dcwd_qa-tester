@@ -1,0 +1,83 @@
+/* The dark colour tokens, and the other theme colours in dark mode. Imported, in order, by app/globals.css. */
+
+.dark {
+  /* Buttons keep white text in dark mode too, so the solid colour stays dark and text gets its own lighter colour. */
+  --acc: #5b62e0;
+  --primary-text: #a9b0f5;
+  --primary-hover: #6b72ea;
+  --acc-t: color-mix(in srgb, var(--acc) 22%, var(--sf));
+  --acc-t2: color-mix(in srgb, var(--acc) 9%, var(--sf));
+  --acc-b: color-mix(in srgb, var(--acc) 42%, var(--sf));
+  --acc-ink: #c3c8fa;
+  --brand: #eceef2;
+  /* A soft slate rather than near-black: easier on the eyes, with layers a step apart (page, card, raised). Every surface
+     takes a breath of the theme colour, so dark mode follows the colour picked in the account menu. Text is a shade off
+     pure white to cut glare; all text pairs stay above 4.5:1 (muted on a raised surface is about 6:1). */
+  --sf: color-mix(in srgb, var(--acc) 5%, #1b1d22);
+  --sf2: color-mix(in srgb, var(--acc) 4%, #17191d);
+  --sf3: color-mix(in srgb, var(--acc) 6%, #24272d);
+  --grouped: color-mix(in srgb, var(--acc) 4%, #131418);
+  --tx: #e7e9ee;
+  --tx2: #d0d3da;
+  --body-2: #bcc0c9;
+  --mu: #a2a6b0;
+  /* For the S4 dot, which always has text beside it. Never for text. */
+  --muted-2: #62656e;
+  --placeholder: #83868f;
+  /* Lines take the theme colour lightly: enough to tie them to it, not enough to glow. */
+  --ln: color-mix(in srgb, var(--primary-text) 16%, var(--sf));
+  --ln2: color-mix(in srgb, var(--primary-text) 9%, var(--sf));
+  --card-border: color-mix(in srgb, var(--primary-text) 18%, var(--sf));
+  --card-highlight: inset 0 0.0625rem 0 color-mix(in srgb, var(--primary-text) 16%, transparent);
+  /* Control outlines need 3:1 against the surface, so these mix from the lighter text colour. */
+  --input: color-mix(in srgb, var(--primary-text) 50%, var(--sf));
+  --navy: #c9cbd2;
+  --table-head: var(--sf3);
+  --row-hover: color-mix(in srgb, var(--acc) 8%, #202227);
+  --on-tone: #0e0f12;
+  --disabled-bg: #282a30;
+  --disabled-text: #62656e;
+  --pending-bg: #2e2510;
+  --pending-text: #f4c24f;
+  --pending-border: #6b5418;
+  --shadow-card: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.22);
+  --shadow-hover: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.35);
+  --shadow-dropdown: 0 1.25rem 3.125rem rgba(0, 0, 0, 0.5);
+  --level-1: #f2726a;
+  --level-2: #f59e42;
+  --level-3: #6ea1f7;
+  --level-4: #8f939c;
+  --ok: #4cc79a;
+  --ok-step: #2fae7f;
+  --ok-t: #16332a;
+  --ok-b: #24503f;
+  --warn: #f0a24b;
+  --warn-t: #3a2a12;
+  --warn-b: rgba(240, 162, 75, 0.35);
+  --bad: #f07a74;
+  --bad-t: #3a1e1f;
+  --bad-w: #2a1819;
+  --bad-b: #5a2a2a;
+  --info: #9db0f2;
+  --info-t: rgba(157, 176, 242, 0.12);
+  --risk-low: #1f3d31;
+  --risk-medium: #4a4020;
+  --risk-high: #5c3a17;
+  --risk-critical: #6b2620;
+  --type-sug-b: rgba(240, 162, 75, 0.35);
+  --type-imp: #a9b0f5;
+  --type-imp-t: rgba(169, 176, 245, 0.14);
+  --type-imp-b: rgba(169, 176, 245, 0.35);
+  --destructive: #d2433d;
+  color-scheme: dark;
+}
+/* The other theme colours in dark mode. Each base colour keeps white text readable (lib/theme.ts), so the solid stays as it is. */
+.dark[data-accent] {
+  --acc: var(--acc-base);
+  --primary-text: color-mix(in srgb, var(--acc-base) 50%, white);
+  --primary-hover: color-mix(in srgb, var(--acc-base) 88%, white);
+  --acc-t: color-mix(in srgb, var(--acc) 22%, var(--sf));
+  --acc-t2: color-mix(in srgb, var(--acc) 9%, var(--sf));
+  --acc-b: color-mix(in srgb, var(--acc) 42%, var(--sf));
+  --acc-ink: color-mix(in srgb, var(--acc-base) 30%, white);
+}

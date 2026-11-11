@@ -12,7 +12,7 @@ function Card({
       data-size={size}
       className={cn(
         // A border with a touch of the theme colour and a faint highlight along the top edge (--card-border,
-        // --card-highlight in app/globals.css). Phones: a rounded card floating on the page, with a soft shadow instead of
+        // --card-highlight in app/_styles/colors.css). Phones: a rounded card floating on the page, with a soft shadow instead of
         // a border, and the same top highlight.
         "group/card flex flex-col overflow-hidden rounded-[0.875rem] border border-(--card-border) bg-card text-sm text-card-foreground shadow-[var(--card-highlight),var(--shadow-card)] max-md:rounded-2xl max-md:border-transparent max-md:shadow-[var(--card-highlight),0_0.0625rem_0.125rem_rgba(20,22,40,0.06),0_0.125rem_0.5rem_rgba(20,22,40,0.04)]",
         className

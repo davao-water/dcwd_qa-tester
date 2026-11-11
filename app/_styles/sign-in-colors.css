@@ -1,0 +1,87 @@
+/* The sign-in page's own palette, light and dark. Imported, in order, by app/globals.css. */
+
+/* The sign-in page's own palette, in the theme colour picked (its dots or the app's) and in light or dark. Tokens resolve where they are declared,
+   so the ones built from others (--background, --acc-t...) are declared again here, or they would keep the app's values. */
+.auth-page {
+  --acc: var(--acc-base);
+  --primary-text: var(--acc);
+  --primary-hover: color-mix(in srgb, var(--acc) 84%, black);
+  --brand: #2233b8;
+  --sf: #ffffff;
+  --sf2: #fafafb;
+  --sf3: #f4f5f8;
+  --grouped: #f2f3f7;
+  --tx: #18181b;
+  --tx2: #3f3f46;
+  --mu: #6b6b74;
+  --placeholder: var(--mu);
+  --ln: #e4e5ea;
+  --ln2: #eef0f4;
+  --ok: #0f6e4f;
+  --ok-t: #e7f5ef;
+  --ok-b: #9ccfb7;
+  --warn: #a15c07;
+  --warn-ink: #7a4505;
+  --warn-t: #fdf3e2;
+  --warn-b: #f0cf95;
+  --bad: #b42318;
+  --bad-t: #fdf0ef;
+  --bad-b: #efb3ad;
+  --info: #2f4aa8;
+  --info-t: #eef1fb;
+  --acc-t: color-mix(in srgb, var(--acc) 10%, var(--sf));
+  --acc-t2: color-mix(in srgb, var(--acc) 5%, var(--sf));
+  --acc-b: color-mix(in srgb, var(--acc) 30%, var(--sf));
+  --acc-ink: color-mix(in srgb, var(--acc) 72%, var(--tx));
+  --background: var(--sf);
+  --foreground: var(--tx);
+  --card: var(--sf);
+  --card-foreground: var(--tx);
+  --popover: var(--sf);
+  --popover-foreground: var(--tx);
+  --primary: var(--acc);
+  --primary-foreground: #ffffff;
+  --secondary: var(--sf3);
+  --secondary-foreground: var(--tx2);
+  --muted: var(--sf3);
+  --muted-foreground: var(--mu);
+  --accent: var(--acc-t2);
+  --accent-foreground: var(--acc-ink);
+  --destructive: #c42f2a;
+  --border: var(--ln);
+  --input: var(--ln);
+  --input-hover: var(--acc-b);
+  --destructive-text: var(--destructive);
+  --ring: var(--acc);
+  /* Buttons here used to fade when disabled, so keep that instead of the app's grey. */
+  --disabled-bg: color-mix(in srgb, var(--acc) 50%, var(--sf));
+  --disabled-text: color-mix(in srgb, var(--primary-foreground) 75%, var(--sf));
+}
+.dark .auth-page {
+  --acc: color-mix(in srgb, var(--acc-base) 70%, white);
+  --brand: color-mix(in srgb, var(--acc-base) 60%, white);
+  --sf: #171a22;
+  --sf2: #1c2029;
+  --sf3: #232733;
+  --grouped: #0b0d12;
+  --tx: #eceef4;
+  --tx2: #c9ccd6;
+  --mu: #9a9dab;
+  --ln: #2c303c;
+  --ln2: #252936;
+  --ok: #5fd0a2;
+  --ok-t: rgba(95, 208, 162, 0.12);
+  --ok-b: rgba(95, 208, 162, 0.35);
+  --warn: #f0b660;
+  --warn-ink: #f6cd8e;
+  --warn-t: rgba(240, 182, 96, 0.12);
+  --warn-b: rgba(240, 182, 96, 0.35);
+  --bad: #f2867c;
+  --bad-t: rgba(242, 134, 124, 0.12);
+  --bad-b: rgba(242, 134, 124, 0.35);
+  --info: #9db0f2;
+  --info-t: rgba(157, 176, 242, 0.12);
+  --background: #0f1218;
+  --primary-foreground: #0f1218;
+  --destructive: #f2867c;
+}

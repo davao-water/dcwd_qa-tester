@@ -8,6 +8,7 @@ Think of QA Hub as a **school building**. Each folder is a room with one job.
 | `app/(main)/` | Classrooms with a hallway | Screens that show the sidebar (tickets, team, My DAR, admin, settings). The brackets mean "group these, but don't put `main` in the address". |
 | `app/login/` | The front door | The sign-in screen, with no sidebar. |
 | `app/api/` | The back office | Jobs a computer calls, not a person: the daily clean-up and notifications. |
+| `app/_styles/` | The paint cupboard | The app's colours, dark mode and animations, one file per job. `app/globals.css` lists them in order, and the order matters: a later file's paint goes on top. |
 | `components/` | **The toy box** (shared pieces) | Buttons, pickers, dialogs, the sidebar: pieces two or more screens share. `components/ui/` holds the store-bought blocks (from shadcn) we don't edit much. `components/skeletons/` holds the grey "loading…" shapes, one file per screen; its `index.ts` lists them all. |
 | `hooks/` | Little helpers for the toys | Small tricks screens reuse, like "is this a phone?" or "is the keyboard open?". |
 | `lib/` | **The filing cabinet** ("data") | Saving and loading: reading and writing the database, uploads, logins and permissions, the rules for tickets and DAR. No screens here, only the brains. |

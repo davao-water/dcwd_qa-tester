@@ -33,7 +33,7 @@ describe("theme", () => {
   });
 
   it("has a CSS rule for every non-default accent, with the same colour", () => {
-    const css = readFileSync(path.join(process.cwd(), "app", "globals.css"), "utf8");
+    const css = readFileSync(path.join(process.cwd(), "app", "_styles", "colors.css"), "utf8");
     for (const a of ACCENTS) {
       if (a.key === DEFAULT_ACCENT) {
         expect(css).toContain(`--acc-base: ${a.color};`);

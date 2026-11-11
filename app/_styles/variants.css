@@ -1,0 +1,26 @@
+/* Custom variants (dark, short, desk) and the scrollbar fade property. Imported, in order, by app/globals.css. */
+
+@custom-variant dark (&:is(.dark *));
+
+/* How visible a scrollbar is, 0 to 1, animated for its dissolve ("Scrollbars" in the base layer). Inherited so the
+   scrollbar's own pseudo-elements follow their element. */
+@property --scroll-fade {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* A phone held sideways, when height is scarce (the markup editor puts its tools beside the screenshot). */
+@custom-variant short {
+  @media (max-height: 30rem) {
+    @slot;
+  }
+}
+
+/* A big laptop or PC screen (1920×1080 up to 2560×1440), where ticket pages fit the window: the page doesn't scroll,
+   only the cards inside it (HANDOFF D21). Smaller laptops, tablets and phones scroll as a normal page. */
+@custom-variant desk {
+  @media (min-width: 1600px) and (min-height: 760px) {
+    @slot;
+  }
+}
