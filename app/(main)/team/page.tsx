@@ -12,6 +12,7 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { pickModule } from "@/lib/areas/directory";
+import { areaStore } from "@/lib/areas/store";
 import { buildTree, canHaveChildren, flatten, MAX_DEPTH, pathTo } from "@/lib/areas/tree";
 import { can, ROLE_LABELS, type Role } from "@/lib/auth/permissions";
 import { requireAction } from "@/lib/auth/session";
@@ -58,20 +59,8 @@ async function TeamBody({ searchParams }: { searchParams: Promise<SearchParams> 
   const person = typeof sp.person === "string" ? sp.person : "";
   const wanted = typeof sp.module === "string" ? sp.module : null;
 
-  const [areas, users] = await Promise.all([
-    db.erpArea.findMany({
-      select: {
-        id: true,
-        parentId: true,
-        name: true,
-        code: true,
-        sortOrder: true,
-        active: true,
-        members: { where: { user: { active: true } }, select: { isLead: true, asDesigner: true, user: { select: { id: true, name: true, role: true, designer: true } } } },
-      },
-    }),
-    db.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true, designer: true, teamLead: true } }),
-  ]);
+  const store = areaStore(db);
+  const [areas, users] = await Promise.all([store.areasWithMembers(), store.activePeople()]);
 
   const people: PersonOption[] = users.map((u) => ({ id: u.id, name: u.name, role: u.role as Role, designer: u.designer }));
   const rows = areas
