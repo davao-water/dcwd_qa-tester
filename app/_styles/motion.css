@@ -1,0 +1,94 @@
+/* Shared animations: page enter, list stagger, pop-ins, skeleton shine and the preloader. Imported, in order, by app/globals.css. */
+
+/* ── Motion: shared enter animations, skeleton shimmer and the QA Hub preloader. All of it stops for reduced motion. ── */
+
+/* Each page's content rises in gently when it opens (app/(main)/layout.tsx). */
+.page-enter {
+  animation: page-rise 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* Lists and card grids: the first few children come in one after another. */
+.stagger > * {
+  animation: page-rise 380ms var(--ease-out) both;
+}
+.stagger > *:nth-child(2) { animation-delay: 30ms; }
+.stagger > *:nth-child(3) { animation-delay: 60ms; }
+.stagger > *:nth-child(4) { animation-delay: 90ms; }
+.stagger > *:nth-child(5) { animation-delay: 120ms; }
+.stagger > *:nth-child(n + 6) { animation-delay: 150ms; }
+@keyframes page-rise {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+/* Something that just appeared or changed: a badge, an unread dot, a saved note. */
+.pop-in {
+  animation: pop-in 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+/* A panel switching in place (account tabs). */
+.panel-in {
+  animation: panel-in 300ms var(--ease-out) both;
+}
+@keyframes panel-in {
+  from { opacity: 0; transform: translate3d(10px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Skeletons: a soft light sweeping across, like the preloader's progress shine. */
+.skeleton-shine {
+  position: relative;
+  overflow: hidden;
+  background: var(--sf3);
+}
+.skeleton-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 20%, color-mix(in srgb, var(--sf) 75%, transparent) 50%, transparent 80%);
+  transform: translate3d(-100%, 0, 0);
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+.dark .skeleton-shine::after {
+  background: linear-gradient(90deg, transparent 20%, rgba(255, 255, 255, 0.06) 50%, transparent 80%);
+}
+@keyframes skeleton-sweep {
+  to { transform: translate3d(100%, 0, 0); }
+}
+
+/* The QA Hub preloader (components/preloader.tsx), after the DCWD Module preloader: water rising inside the emblem.
+   Rings, ripples, float and waves come from .auth-brand above. */
+.qa-splash .water {
+  position: absolute;
+  inset: 0;
+  transition: transform 500ms var(--ease-out);
+  will-change: transform;
+}
+.qa-splash .slosh {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  width: 200%;
+  max-width: none;
+  height: 200%;
+  will-change: transform;
+}
+.qa-splash .s1 { animation: qa-slosh 3.2s linear infinite; }
+.qa-splash .s2 { animation: qa-slosh 4.6s linear infinite reverse; }
+@keyframes qa-slosh {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.qa-splash {
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+}
+.qa-splash.is-done {
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+}
+/* Shown before React runs only when this session hasn't seen it yet (the inline script in components/app-splash.tsx). */
+html:not(.qa-splash-on) .qa-splash {
+  display: none;
+}

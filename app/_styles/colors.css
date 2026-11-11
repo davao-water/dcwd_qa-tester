@@ -1,0 +1,140 @@
+/* The light colour tokens, and the other theme colours (data-accent). Imported, in order, by app/globals.css. */
+
+:root {
+  /* The accent everything is tinted from. Users pick another one in the account menu (lib/theme.ts, data-accent). */
+  /* Motion: the shared easing, and minimising or opening the sidebar with a little springy overshoot
+     (components/ui/sidebar.tsx, app-sidebar.tsx). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --sidebar-dur: 520ms;
+  --sidebar-ease: cubic-bezier(0.34, 1.3, 0.5, 1);
+  --acc-base: #4f56d3;
+  /* --acc is the solid colour (buttons, active nav); --primary-text is the same colour for text and links. They differ in
+     dark mode. The values below are Base DCWD's for the default indigo; [data-accent] mixes them for the other colours. */
+  --acc: var(--acc-base);
+  --primary-text: var(--acc);
+  --primary-hover: #3f45c0;
+  --brand: #1e2a78;
+  --sf: #ffffff;
+  --sf2: #f7f8fe;
+  --sf3: #eef2fd;
+  --grouped: #f4f6fd;
+  --tx: #1e2a78;
+  --tx2: #2a3170;
+  --body-2: #3d4580;
+  --mu: #525a8c;
+  --muted-2: #8a90b8;
+  --placeholder: var(--mu);
+  --ln: #dde3f7;
+  --ln2: #e8ecfa;
+  --navy: #1e2a78;
+  --table-head: #edf1fb;
+  --row-hover: #f1f3fd;
+  /* Text on a solid green, red or amber. White here; dark in dark mode, where those colours are light. */
+  --on-tone: #ffffff;
+  --disabled-bg: #e9ecf8;
+  --disabled-text: #a3a8c6;
+  --pending-bg: #fffbeb;
+  --pending-text: #b45309;
+  --pending-border: #f7d56b;
+  --shadow-card: 0 0.125rem 0.375rem rgba(20, 28, 90, 0.06);
+  /* Cards: a border with a touch of the theme colour, and a faint line of it along the top edge, like light catching it.
+     Kept quiet so cards read as surfaces, not as outlined boxes. */
+  --card-border: color-mix(in srgb, var(--acc) 10%, var(--ln));
+  --card-highlight: inset 0 0.0625rem 0 color-mix(in srgb, var(--acc) 9%, transparent);
+  --shadow-hover: 0 0.125rem 0.5rem rgba(20, 22, 60, 0.08);
+  --shadow-dropdown: 0 1.25rem 3.125rem rgba(20, 28, 90, 0.22);
+  --shadow-nav-active: 0 0.25rem 0.875rem color-mix(in srgb, var(--acc) 32%, transparent);
+  /* #0f6e4f, not Base DCWD's #12805c: that one is 4.38:1 on the green pill, below the 4.5 AA needs. */
+  /* Severity and priority, 1 to 4: red, orange, blue, grey (app/(main)/tickets/ticket-bits.tsx). Fixed values, not the theme
+     colour, so "normal" looks the same for everyone and never like "urgent". */
+  --level-1: #d92d20;
+  --level-2: #ea7a0c;
+  --level-3: #2f6fed;
+  --level-4: #8b8f98;
+  --ok: #0f6e4f;
+  --ok-step: #219a6d;
+  --ok-t: #e7f5ef;
+  --ok-b: #bfe3d2;
+  --warn: #b45309;
+  --warn-ink: var(--warn);
+  --warn-t: #fff4df;
+  --warn-b: #f0cf95;
+  --bad: #c42f2a;
+  --bad-t: #fdeeed;
+  --bad-w: #fff8f7;
+  --bad-b: #f6d3d1;
+  --info: #2f4aa8;
+  --info-t: #eef1fb;
+  --risk-low: #dff2e8;
+  --risk-medium: #fcefc9;
+  --risk-high: #f8cf98;
+  --risk-critical: #f1a29a;
+  /* Ticket types: Bug red, Suggestion amber, Improvement blue (lib/tickets/workflow.ts TYPE_TONES). Fixed values, not the
+     theme colour: with Rose chosen, Improvement would otherwise look like Bug. */
+  --type-bug: var(--bad);
+  --type-bug-t: var(--bad-t);
+  --type-bug-b: var(--bad-b);
+  --type-sug: var(--warn);
+  --type-sug-t: var(--warn-t);
+  --type-sug-b: #f3c98b;
+  --type-imp: #4f56d3;
+  --type-imp-t: #eef0fc;
+  --type-imp-b: #dfe2f8;
+
+  --acc-t: #eef0fc;
+  --acc-t2: #f6f6fe;
+  --acc-b: #dfe2f8;
+  --acc-ink: #3b40b8;
+
+  --background: var(--sf);
+  --foreground: var(--tx);
+  --card: var(--sf);
+  --card-foreground: var(--tx);
+  --popover: var(--sf);
+  --popover-foreground: var(--tx);
+  --primary: var(--acc);
+  --primary-foreground: #ffffff;
+  --secondary: var(--sf3);
+  --secondary-foreground: var(--tx2);
+  --muted: var(--sf3);
+  --muted-foreground: var(--mu);
+  --accent: var(--acc-t2);
+  --accent-foreground: var(--acc-ink);
+  --destructive: #c42f2a;
+  --border: var(--ln);
+  /* Control outlines need 3:1 against the page, which --ln doesn't reach. Cards and dividers keep --ln. */
+  --input: var(--muted-2);
+  --input-hover: var(--acc);
+  /* Errors as text. --destructive is the solid button colour, too dark to read on the dark surface. */
+  --destructive-text: var(--bad);
+  --ring: var(--acc);
+  --chart-1: var(--acc);
+  --chart-2: #0e8a8c;
+  --chart-3: #c95f0c;
+  --chart-4: #7b4bd1;
+  --chart-5: #1f8a55;
+  --radius: 0.5rem;
+  --sidebar: var(--sf);
+  --sidebar-foreground: var(--tx2);
+  --sidebar-primary: var(--acc);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--row-hover);
+  --sidebar-accent-foreground: var(--tx2);
+  --sidebar-border: var(--ln);
+  --sidebar-ring: var(--acc);
+}
+
+/* Theme colours (data-accent on <html>). Keep in sync with ACCENTS in lib/theme.ts. */
+[data-accent="blue"] { --acc-base: #1d64d8; }
+[data-accent="teal"] { --acc-base: #0f7c7e; }
+[data-accent="green"] { --acc-base: #18794e; }
+[data-accent="violet"] { --acc-base: #7445c9; }
+[data-accent="rose"] { --acc-base: #c0365a; }
+/* Only the five other colours have data-accent (lib/theme.ts), so the default indigo keeps Base DCWD's exact values. */
+[data-accent] {
+  --primary-hover: color-mix(in srgb, var(--acc) 84%, black);
+  --acc-t: color-mix(in srgb, var(--acc) 10%, var(--sf));
+  --acc-t2: color-mix(in srgb, var(--acc) 5%, var(--sf));
+  --acc-b: color-mix(in srgb, var(--acc) 18%, var(--sf));
+  --acc-ink: color-mix(in srgb, var(--acc) 72%, var(--tx));
+}

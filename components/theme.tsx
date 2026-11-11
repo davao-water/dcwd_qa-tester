@@ -21,7 +21,7 @@ const REVEAL_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 /**
  * The theme and a setter that reveals the new look in a growing circle, from the button that was pressed (or the middle
  * of the window), like Magic UI's animated theme toggler. It uses the View Transitions API: the browser keeps a picture of
- * the old page and clips the new one in over it (app/globals.css, `.theme-reveal`). Browsers without it, and people who
+ * the old page and clips the new one in over it (app/_styles/theme-switch.css, `.theme-reveal`). Browsers without it, and people who
  * turn motion off, switch at once. Every theme switch goes through this.
  */
 export function useThemeSwitch() {

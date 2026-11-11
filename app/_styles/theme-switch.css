@@ -1,0 +1,16 @@
+/* The circle reveal when switching light and dark. Imported, in order, by app/globals.css. */
+
+/* Switching light and dark (components/theme.tsx, useThemeSwitch): the new look is revealed in a growing circle over a
+   still picture of the old one. Script draws the circle; these turn off the browser's own cross-fade while it runs, so
+   the two pictures don't blend. Without the API, or with motion turned off, it's instant. */
+html.theme-reveal::view-transition-old(root),
+html.theme-reveal::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-reveal::view-transition-old(root) {
+  z-index: 0;
+}
+html.theme-reveal::view-transition-new(root) {
+  z-index: 1;
+}

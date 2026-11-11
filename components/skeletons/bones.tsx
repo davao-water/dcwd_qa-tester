@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 // Loading placeholders shaped like each page, shown while its data loads (the pages' <Suspense> fallbacks). A soft light
-// sweeps across them (.skeleton-shine in app/globals.css); screen readers hear "Loading…" once.
+// sweeps across them (.skeleton-shine in app/_styles/motion.css); screen readers hear "Loading…" once.
 
 export function Bone({ className, width }: { className?: string; width?: string }) {
   return <div aria-hidden className={cn("skeleton-shine rounded-md", className)} style={width ? { width } : undefined} />;

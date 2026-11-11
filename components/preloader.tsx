@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 
 // The QA Hub preloader, after the DCWD ERP's Module preloader: QA Hub's emblem (a lab flask for the QA workshop, with a check) in a
 // white ring that fills with water as loading goes on, inside slowly rippling rings, with waves along the bottom. The
-// rings, ripples, float and waves reuse the sign-in brand pane's styles and colours (.auth-brand in globals.css). With a
-// theme colour other than the default indigo picked, the preloader takes its colours from it (.qa-splash in globals.css);
+// rings, ripples, float and waves reuse the sign-in brand pane's styles and colours (.auth-brand in app/_styles/sign-in-brand.css). With a
+// theme colour other than the default indigo picked, the preloader takes its colours from it (.qa-splash in app/_styles/motion.css);
 // the colour is on <html> before the first paint (ACCENT_SCRIPT), so it never shows indigo first.
 
 /** How long a wave is drawn, in px, and the length of one rise or one fall. */

@@ -6,7 +6,7 @@ import { useEffect } from "react";
 const HIDE_AFTER_MS = 900;
 
 /**
- * Scrollbars are hidden until something scrolls (app/globals.css, "Scrollbars"). This marks whatever is scrolling, the
+ * Scrollbars are hidden until something scrolls (app/_styles/base.css, "Scrollbars"). This marks whatever is scrolling, the
  * page or a card's own list, with `data-scrolling` while it moves, and clears it shortly after it stops. One listener
  * for the whole app; it renders nothing.
  */

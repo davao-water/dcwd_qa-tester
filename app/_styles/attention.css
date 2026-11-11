@@ -1,0 +1,55 @@
+/* The bell's shake, unread pings and the background waves. Imported, in order, by app/globals.css. */
+
+/* Unread attention. The bell gives a short shake every 6 seconds while anything is unread (and again as soon as more
+   arrives); every red unread dot gives off a soft ring now and then. Both stop for people who reduce motion. */
+@keyframes qa-ring {
+  0%, 14%, 100% { transform: rotate(0deg); }
+  2% { transform: rotate(14deg); }
+  4% { transform: rotate(-12deg); }
+  6% { transform: rotate(10deg); }
+  8% { transform: rotate(-8deg); }
+  10% { transform: rotate(5deg); }
+  12% { transform: rotate(-2deg); }
+}
+.qa-ring {
+  transform-origin: 50% 12%;
+  animation: qa-ring 6s ease-in-out 0.4s infinite;
+}
+@keyframes qa-ping {
+  0% { transform: scale(1); opacity: 0.55; }
+  60%, 100% { transform: scale(2.6); opacity: 0; }
+}
+.qa-ping {
+  animation: qa-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qa-ring, .qa-ping { animation: none; }
+}
+
+/* The app's background waves: three drifting waves behind the content, stuck to the bottom of the window. They take no
+   space and no clicks. The footer bar with the name sits in front of them (components/wave-footer.tsx). */
+.qa-waves {
+  position: sticky;
+  bottom: 0;
+  z-index: 0;
+  height: 9.375rem;
+  margin-top: -9.375rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* 400rem wide with one wave every 100rem: exactly how far qa-drift slides it, so the loop has no seam on wide screens. */
+.qa-waves svg {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 400rem;
+  max-width: none;
+  height: 9.375rem;
+}
+.qa-waves .w1 { animation: qa-drift 26s linear infinite; fill: color-mix(in srgb, var(--acc) 8%, var(--grouped)); }
+.qa-waves .w2 { animation: qa-drift 18s linear infinite reverse; fill: color-mix(in srgb, var(--acc) 14%, var(--grouped)); }
+.qa-waves .w3 { animation: qa-drift 12s linear infinite; fill: color-mix(in srgb, var(--acc) 22%, var(--grouped)); }
+@keyframes qa-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-100rem, 0, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .qa-waves .w1, .qa-waves .w2, .qa-waves .w3 { animation: none; }
+}

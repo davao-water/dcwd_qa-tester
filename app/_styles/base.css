@@ -1,0 +1,131 @@
+/* Base styles: slim scrollbars that appear while scrolling, QA Hub's own checkboxes and radios, and the page body. Imported, in order, by app/globals.css. */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* Scrollbars: slim and invisible until something scrolls. components/scrollbar-activity.tsx marks the page or card being
+     scrolled with [data-scrolling] and clears it about a second after it stops, so the thumb shows only while moving.
+     The thumb is a soft mix of the theme colour and grey, so it follows the person's accent in light and dark. The
+     track keeps its thin width, so nothing shifts when it appears. Firefox and Chromium read scrollbar-*; Safari needs
+     the pseudo-elements. */
+  :root {
+    --scroll-thumb: color-mix(in srgb, color-mix(in srgb, var(--acc) 40%, var(--mu)) 55%, transparent);
+  }
+  /* The dissolve: --scroll-fade goes 0 → 1 quickly when scrolling starts and back to 0 slowly after it stops, and the
+     thumb's colour is mixed by it. It is registered (@property, below) so the browser can animate it. */
+  * {
+    --scroll-fade: 0;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--scroll-thumb) calc(var(--scroll-fade) * 100%), transparent) transparent;
+    transition: --scroll-fade 0.6s ease-out;
+  }
+  [data-scrolling] {
+    --scroll-fade: 1;
+    transition-duration: 0.15s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none;
+    }
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: transparent padding-box;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--scroll-thumb) calc(var(--scroll-fade) * 100%), transparent);
+  }
+  /* Checkboxes and radios in QA Hub's style instead of the browser's. */
+  input[type="checkbox"]:not([role]),
+  input[type="radio"]:not([role]) {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    border: 1.5px solid color-mix(in srgb, var(--mu) 55%, transparent);
+    background: var(--sf);
+    cursor: pointer;
+    transition:
+      background-color 160ms var(--ease-out),
+      border-color 160ms var(--ease-out),
+      box-shadow 160ms var(--ease-out);
+  }
+  input[type="checkbox"]:not([role]) {
+    border-radius: 5px;
+  }
+  input[type="radio"]:not([role]) {
+    border-radius: 999px;
+  }
+  input[type="checkbox"]:not([role])::before,
+  input[type="radio"]:not([role])::before {
+    content: "";
+    background: var(--primary-foreground);
+    transform: scale(0);
+    transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  input[type="checkbox"]:not([role])::before {
+    width: 0.62rem;
+    height: 0.62rem;
+    clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 37% 70%);
+  }
+  input[type="radio"]:not([role])::before {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+  }
+  input[type="checkbox"]:not([role]):checked,
+  input[type="radio"]:not([role]):checked {
+    border-color: var(--acc);
+    background: var(--acc);
+  }
+  input[type="checkbox"]:not([role]):checked::before,
+  input[type="radio"]:not([role]):checked::before {
+    transform: scale(1);
+  }
+  input[type="checkbox"]:not([role]):hover:not(:disabled),
+  input[type="radio"]:not([role]):hover:not(:disabled) {
+    border-color: var(--acc);
+  }
+  input[type="checkbox"]:not([role]):focus-visible,
+  input[type="radio"]:not([role]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);
+  }
+  input[type="checkbox"]:not([role]):disabled,
+  input[type="radio"]:not([role]):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* A grid with no columns set grows to its widest content, and text cut off with "…" still counts at full length, so one long
+     module name made a list wider than the phone and pushed the whole page and the tab bar sideways. So on phones a grid's
+     default column fits the page. In this layer, so any grid-cols-* class still wins. */
+  @media (width < 48rem) {
+    [data-main] .grid,
+    [data-main] .max-md\:grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  html {
+    @apply font-sans;
+    /* Everything is sized in rem, so the whole UI grows with this: as on a 1920 × 1080 screen up to 1920 px wide, then in
+       step with the width (2560 px wide → 21.3 px, like 1920 scaled up), capped at twice the size on 4K. Media queries
+       still use the browser's 16 px, so the layout breakpoints don't move. */
+    font-size: clamp(16px, 0.8334vw, 32px);
+  }
+}

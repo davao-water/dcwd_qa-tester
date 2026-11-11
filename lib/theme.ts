@@ -1,5 +1,5 @@
 // Appearance: light/dark mode (next-themes, stored per browser) and the accent colour every page derives its
-// highlights from (--acc in app/globals.css). Each accent keeps white button text readable (WCAG AA) in light mode;
+// highlights from (--acc in app/_styles/colors.css). Each accent keeps white button text readable (WCAG AA) in light mode;
 // dark mode lightens it automatically.
 
 export const ACCENTS = [
