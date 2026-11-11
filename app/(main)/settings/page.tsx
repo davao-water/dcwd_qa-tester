@@ -16,6 +16,9 @@ import { SettingsRowBody, rowClass, type TileTone } from "./settings-row";
 
 export const metadata: Metadata = { title: "Settings" };
 
+/** The commit this copy of QA Hub was built from (Vercel sets it), so anyone can tell which version is live. */
+const BUILD = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
+
 // The phone's Settings tab: everything My account has, plus Team and (for admins) Users, as short groups of rows like a
 // phone's own settings. On a laptop the sidebar and My account cover the same ground, but the page works there too.
 
@@ -70,6 +73,10 @@ async function SettingsBody() {
       <div className="overflow-hidden rounded-2xl bg-card shadow-[0_0.0625rem_0.125rem_rgba(20,22,40,0.06),0_0.125rem_0.5rem_rgba(20,22,40,0.04)]">
         <SignOutRow />
       </div>
+
+      <p className="text-center text-[0.8125rem] text-muted-foreground">
+        Build <span className="font-mono">{BUILD}</span>
+      </p>
     </div>
   );
 }
