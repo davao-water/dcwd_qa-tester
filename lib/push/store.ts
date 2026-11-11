@@ -15,6 +15,11 @@ export function pushStore(db: PrismaClient) {
       await db.pushSubscription.deleteMany({ where: { userId, endpoint } });
     },
 
+    /** Turns notifications off on every one of this person's devices (Users → Sign out all devices, for a lost phone). */
+    async forgetDevices(userId: string): Promise<void> {
+      await db.pushSubscription.deleteMany({ where: { userId } });
+    },
+
     /** Whether this device is on for this person (the browser may still hold a subscription the server dropped). */
     async has(userId: string, endpoint: string): Promise<boolean> {
       return (await db.pushSubscription.count({ where: { userId, endpoint } })) > 0;

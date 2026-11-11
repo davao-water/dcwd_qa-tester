@@ -1,4 +1,4 @@
-import { AREA_PATH_SELECT, rootName } from "@/lib/areas/tree";
+import { rootName } from "@/lib/areas/tree";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -14,6 +14,7 @@ import { tempAccessStore, type TempGrant } from "@/lib/auth/temp-access";
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { filterUsers } from "@/lib/users/filter";
+import { userAdminStore } from "@/lib/users/store";
 import { cn } from "@/lib/utils";
 import { UserDialog } from "./_dialogs/user-dialog";
 import { UserFilters } from "./_list/user-filters";
@@ -31,6 +32,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const tempAccess = tempAccessStore(db);
+const accounts = userAdminStore(db);
 
 /** The table head, as on the board: uppercase on the table-head colour. Sticks to the top while rows scroll. */
 const HEAD = "sticky top-0 z-1 h-[3.125rem] bg-table-head px-3.5 text-left align-middle text-[0.7813rem] font-semibold tracking-[0.05em] text-navy uppercase first:rounded-l-lg last:rounded-r-lg";
@@ -58,32 +60,10 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
   const f = { q: one(sp.q).slice(0, 100), role: one(sp.role), module: one(sp.module), status: one(sp.status) };
 
   const [requests, resets, users, grants] = await Promise.all([
-    db.user.findMany({
-      where: { pending: true },
-      orderBy: { createdAt: "asc" },
-      select: { id: true, name: true, email: true, role: true, createdAt: true, claimHash: true },
-    }),
-    db.user.findMany({
-      where: { pending: false, resetRequestedAt: { not: null } },
-      orderBy: { resetRequestedAt: "asc" },
-      select: { id: true, name: true, email: true, role: true, active: true, resetRequestedAt: true },
-    }),
-    // The account list is for admins only: someone with temporary access matches no rows.
-    db.user.findMany({
-      where: { pending: false, ...(full ? {} : { id: { in: [] } }) },
-      orderBy: [{ active: "desc" }, { role: "asc" }, { name: "asc" }],
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        designer: true,
-        teamLead: true,
-        active: true,
-        mustChangePassword: true,
-        areas: { select: { isLead: true, area: { select: AREA_PATH_SELECT } } },
-      },
-    }),
+    accounts.signUpRequests(),
+    accounts.resetRequests(),
+    // The account list is for admins only: someone with temporary access gets no rows.
+    accounts.accounts(full),
     full ? tempAccess.live() : new Map<string, TempGrant>(),
   ]);
 
