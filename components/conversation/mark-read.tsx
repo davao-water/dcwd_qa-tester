@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useNotifications } from "@/components/notifications";
 import { ticketTag } from "@/lib/push/message";
-import { markTicketRead } from "../actions";
+import { markTicketRead } from "@/app/(main)/tickets/actions";
 
 /**
  * Closes this ticket's device notifications (its replies and each status change), so its "3 new replies" count starts
