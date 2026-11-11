@@ -12,7 +12,15 @@ export function PasswordInput({ className, icon, ...props }: Omit<React.Componen
 
   return (
     <IconField icon={icon}>
-      <Input {...props} type={visible ? "text" : "password"} autoCapitalize="off" autoCorrect="off" spellCheck={false} className={cn("pr-12", icon && "pl-[2.625rem]", className)} />
+      {/* Edge adds its own eye to password fields; hide it so only this one shows. */}
+      <Input
+        {...props}
+        type={visible ? "text" : "password"}
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        className={cn("pr-12 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden", icon && "pl-[2.625rem]", className)}
+      />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
