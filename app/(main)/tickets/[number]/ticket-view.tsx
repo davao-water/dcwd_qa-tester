@@ -14,7 +14,7 @@ import {
   canEditTicket,
   isDone,
 } from "@/lib/tickets/workflow";
-import { ticketFormOptions } from "../options";
+import { ticketFormOptions } from "@/lib/tickets/form-options";
 import { ActivityLog } from "./_view/activity-log";
 import { ConversationCard } from "./_view/conversation-card";
 import { DetailsCard } from "./_view/details-card";
@@ -54,7 +54,7 @@ export async function TicketView({ params, mode }: { params: Promise<{ number: s
   const assignable = canAssignTicket(t, me) && !isDone(t.status);
   // Won't fix can hand the ticket back to QA with a recommended developer, so that person needs the list too.
   const handsBack = canHandBack(t, me);
-  const options = editable || assignable || handsBack ? await ticketFormOptions() : null;
+  const options = editable || assignable || handsBack ? await ticketFormOptions(db) : null;
   const now = new Date();
 
   const header = (

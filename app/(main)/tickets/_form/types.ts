@@ -1,10 +1,8 @@
-import type { Role } from "@/lib/auth/permissions";
+import type { AreaOption, AssigneeOption } from "@/lib/tickets/form-options";
 import { PRIORITIES, type DeviceType, type SeverityValue, type TicketType } from "@/lib/tickets/workflow";
 
-/** A module with what's inside it, at every level (lib/areas/tree.ts). */
-export type AreaOption = { id: string; name: string; children: AreaOption[] };
-/** A developer or admin, with the areas they belong to, so the picker can suggest the right people. */
-export type AssigneeOption = { id: string; name: string; role: Role; areaIds: string[]; leadAreaIds: string[] };
+// The pickers' option lists are loaded in lib/tickets/form-options.ts; their types are passed on from here.
+export type { AreaOption, AssigneeOption };
 
 export type TicketValues = {
   id: string;

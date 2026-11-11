@@ -14,8 +14,8 @@ import { notificationStore } from "@/lib/tickets/notifications";
 import { PAGE_SIZE, ticketStore, type ViewPatch } from "@/lib/tickets/store";
 import { canAssign } from "@/lib/tickets/workflow";
 import { TicketBoard } from "./board";
-import { PhoneTicketGroups } from "./ticket-card";
-import { reporterOptions, ticketFormOptions } from "./options";
+import { PhoneTicketGroups } from "@/components/ticket-card";
+import { reporterOptions, ticketFormOptions } from "@/lib/tickets/form-options";
 import { ViewSwitch } from "./view-switch";
 import { boardColumns } from "./_list/board-columns";
 import { DeskFilters } from "./_list/desk-filters";
@@ -93,13 +93,13 @@ async function TicketList({
   const [list, board, { areas, people }, viewCounts, reporters] = await Promise.all([
     view === "list" ? tickets.list(f, me) : null,
     view === "board" ? tickets.board(f, me) : null,
-    ticketFormOptions(),
+    ticketFormOptions(db),
     tickets.viewCounts(
       f,
       me,
       QUICK.map((v) => v.patch as ViewPatch),
     ),
-    reporterOptions(),
+    reporterOptions(db),
   ]);
   const rows = list?.rows ?? [];
   const total = list

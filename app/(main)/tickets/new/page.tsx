@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/page-header";
 import { FormSkeleton } from "@/components/skeletons";
 import { can } from "@/lib/auth/permissions";
 import { requireAction } from "@/lib/auth/session";
-import { ticketFormOptions } from "../options";
+import { db } from "@/lib/db";
+import { ticketFormOptions } from "@/lib/tickets/form-options";
 import { TicketForm } from "../ticket-form";
 
 export const metadata: Metadata = { title: "New ticket" };
@@ -25,6 +26,6 @@ export default function NewTicketPage() {
 async function NewTicket() {
   await connection();
   const me = await requireAction("tickets.create");
-  const { areas, people } = await ticketFormOptions();
+  const { areas, people } = await ticketFormOptions(db);
   return <TicketForm areas={areas} people={people} canAssign={can(me, "tickets.assign")} draftUserId={me.id} />;
 }

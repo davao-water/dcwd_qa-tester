@@ -10,7 +10,7 @@ import {
   NO_CATEGORY,
   TICKET_CATEGORIES,
 } from "@/lib/tickets/workflow";
-import type { reporterOptions, ticketFormOptions } from "../options";
+import type { reporterOptions, ticketFormOptions } from "@/lib/tickets/form-options";
 
 type FormOptions = Awaited<ReturnType<typeof ticketFormOptions>>;
 type Reporters = Awaited<ReturnType<typeof reporterOptions>>;

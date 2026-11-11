@@ -6,7 +6,7 @@ import type { TicketFilters } from "@/lib/schemas/ticket";
 import type { TicketListRow } from "@/lib/tickets/store";
 import { CATEGORY_LABELS, NO_CATEGORY, type SeverityValue } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import { levelDot, levelName, TicketStatusPill, TicketTypeLabel, typeStyle, UnreadDot } from "../ticket-bits";
+import { levelDot, levelName, TicketStatusPill, TicketTypeLabel, typeStyle, UnreadDot } from "@/components/ticket-badges";
 import { PeekLink } from "../ticket-peek";
 import { Pager } from "./pager";
 

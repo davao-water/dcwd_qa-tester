@@ -3,7 +3,7 @@
 import { MessageSquareIcon } from "lucide-react";
 import { PRIORITY_LABELS, TYPE_LABELS, type Transition } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import { LevelTag, SeverityTag, TicketStatusPill, TYPE_ICON, typeStyle, UnreadDot } from "../ticket-bits";
+import { LevelTag, SeverityTag, TicketStatusPill, TYPE_ICON, typeStyle, UnreadDot } from "@/components/ticket-badges";
 import { PeekLink } from "../ticket-peek";
 import { CardMenu } from "./card-menu";
 import { Person } from "./person";
