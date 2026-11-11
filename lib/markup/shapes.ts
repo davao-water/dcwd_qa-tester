@@ -1,5 +1,5 @@
 // Screenshot markup (Phase 3.8): what can be drawn on an image, in the image's own pixels. Framework-free, so the
-// geometry is tested without a browser; lib/markup/draw.ts paints it and app/(main)/tickets/markup is the editor.
+// geometry is tested without a browser; lib/markup/draw.ts paints it and components/markup is the editor.
 
 export type Point = { x: number; y: number };
 export type Rect = { x: number; y: number; w: number; h: number };

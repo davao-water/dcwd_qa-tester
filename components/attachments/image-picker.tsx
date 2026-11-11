@@ -12,7 +12,7 @@ import type { ImageAttachments } from "./use-image-attachments";
 import { MarkupEditor } from "../markup/markup-editor";
 
 // Images for a ticket or comment: what is attached, with Edit, Retry and Remove, and the ways to add more. The work
-// (markup, upload, retry) is in _images/use-image-attachments.ts.
+// (markup, upload, retry) is in use-image-attachments.ts.
 
 /** The id of the hidden camera input for the picker with this `id`. */
 export const cameraInputId = (id: string) => `${id}-camera`;
