@@ -41,6 +41,7 @@ one-job files a big screen was split into:
 
 | Drawer | What's inside |
 |---|---|
+| `(main)/_home/` | The dashboard (Home) pieces: the admin home, the tester and developer home, the number cards, the ticket list |
 | `tickets/_list/` | The pieces of the tickets list: tabs, filters, table, pager, the board's columns |
 | `tickets/_board/` | The board's pieces: a card, its ⋯ menu, the column tabs, the move dialog, drag-and-drop with Undo |
 | `tickets/_form/` | The New ticket / Edit form's pieces: type picker, details fields, draft saving |

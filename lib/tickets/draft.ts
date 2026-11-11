@@ -4,7 +4,7 @@
 
 import { DEVICE_TYPES, type DeviceType } from "./workflow";
 
-/** The same as PENDING_TTL_MS in store.ts: a file not sent within this long is removed from Storage. */
+/** The same as PENDING_TTL_MS in pending-uploads.ts: a file not sent within this long is removed from Storage. */
 export const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 /** The fields a draft keeps. */
