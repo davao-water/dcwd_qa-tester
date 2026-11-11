@@ -2,7 +2,7 @@
 
 import { TICKET_TYPES, TYPE_LABELS, type TicketType } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import { TYPE_ICON, TypeTile, typeStyle } from "../ticket-bits";
+import { TYPE_ICON, TypeTile, typeStyle } from "@/components/ticket-badges";
 
 const TYPE_HINTS: Record<TicketType, string> = {
   BUG: "Something in the ERP is wrong or broken.",

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, useTransition } from "react";
 import { BellIcon, CheckCheckIcon, InboxIcon, XIcon } from "lucide-react";
 import { markAllTicketsRead } from "@/app/(main)/tickets/actions";
-import { UnreadDot } from "@/app/(main)/tickets/ticket-bits";
+import { UnreadDot } from "@/components/ticket-badges";
 import { useNotifications } from "@/components/notifications";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";

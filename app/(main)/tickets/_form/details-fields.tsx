@@ -17,7 +17,7 @@ import {
   type TicketType,
 } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import { levelDot } from "../ticket-bits";
+import { levelDot } from "@/components/ticket-badges";
 import { AreaSelect } from "./area-select";
 import { AssigneeSelect } from "./assignee-select";
 import type { AreaOption, AssigneeOption, TicketValues } from "./types";

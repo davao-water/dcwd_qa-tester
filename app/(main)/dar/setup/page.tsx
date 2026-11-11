@@ -12,7 +12,7 @@ import { firstPeriodOf, manilaDay, periodFor, schemeOf } from "@/lib/dar/period"
 import { darStore } from "@/lib/dar/store";
 import { db } from "@/lib/db";
 import { ImportDar } from "./import-dar";
-import { ticketFormOptions } from "../../tickets/options";
+import { ticketFormOptions } from "@/lib/tickets/form-options";
 import { DarSetupForm } from "./setup-form";
 
 export const metadata: Metadata = { title: "My DAR set-up" };
@@ -41,7 +41,7 @@ export default function DarSetupPage() {
 async function SetupBody() {
   await connection();
   const me = await requireAction("dar.use");
-  const [header, profile, saved, { areas }] = await Promise.all([dar.header(me), dar.profile(me.id), dar.list(me.id), ticketFormOptions()]);
+  const [header, profile, saved, { areas }] = await Promise.all([dar.header(me), dar.profile(me.id), dar.list(me.id), ticketFormOptions(db)]);
   const today = manilaDay(new Date());
   const scheme = schemeOf(profile?.periodScheme);
   const first = firstPeriodOf(profile?.firstPeriodStart, saved.map((s) => s.periodStart), scheme) ?? periodFor(today, scheme);

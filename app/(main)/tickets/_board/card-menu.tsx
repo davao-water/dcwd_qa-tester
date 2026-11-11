@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { Menu } from "@base-ui/react/menu";
 import { EllipsisIcon, SquareArrowOutUpRightIcon, UserRoundPlusIcon } from "lucide-react";
 import type { Transition } from "@/lib/tickets/workflow";
-import { TicketStatusPill } from "../ticket-bits";
+import { TicketStatusPill } from "@/components/ticket-badges";
 import type { BoardCard } from "./types";
 
 const item =

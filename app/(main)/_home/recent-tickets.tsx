@@ -3,8 +3,8 @@ import { Card } from "@/components/ui/card";
 import { shortAgo } from "@/lib/format";
 import type { TicketStore } from "@/lib/tickets/store";
 import { cn } from "@/lib/utils";
-import { levelDot, levelName, TicketStatusPill, UnreadDot } from "../tickets/ticket-bits";
-import { PhoneTicketList } from "../tickets/ticket-card";
+import { levelDot, levelName, TicketStatusPill, UnreadDot } from "@/components/ticket-badges";
+import { PhoneTicketList } from "@/components/ticket-card";
 import { CardHead } from "./card-head";
 
 type Recent = Awaited<ReturnType<TicketStore["recent"]>>[number];

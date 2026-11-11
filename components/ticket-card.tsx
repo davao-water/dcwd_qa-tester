@@ -4,7 +4,7 @@ import { dayGroup, shortAgo } from "@/lib/format";
 import type { TicketStatus, TicketType } from "@/lib/tickets/workflow";
 import { CATEGORY_LABELS, NO_CATEGORY, type TicketCategoryValue } from "@/lib/tickets/workflow";
 import { cn } from "@/lib/utils";
-import { TicketStatusPill, TypeTile } from "./ticket-bits";
+import { TicketStatusPill, TypeTile } from "./ticket-badges";
 
 // Phones: tickets as rows in rounded cards instead of a table. Each row leads with the type tile, then "#128 · Billing"
 // and the time, the title on up to two lines (bold while unread), the status and who has it. The whole row opens it.

@@ -6,7 +6,7 @@ import { boardColumn } from "@/lib/tickets/board";
 import { STATUS_LABELS, type Transition } from "@/lib/tickets/workflow";
 import { AssignForm } from "../[number]/_controls/assign-form";
 import { MoveForm } from "../[number]/_controls/move-form";
-import { TicketStatusPill } from "../ticket-bits";
+import { TicketStatusPill } from "@/components/ticket-badges";
 import type { AreaOption, AssigneeOption } from "../_form/types";
 import type { Task } from "./types";
 
