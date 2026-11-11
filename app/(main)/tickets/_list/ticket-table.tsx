@@ -10,9 +10,12 @@ import { levelDot, levelName, TicketStatusPill, TicketTypeLabel, typeStyle, Unre
 import { PeekLink } from "../ticket-peek";
 import { Pager } from "./pager";
 
-/** The 50 px table head row, as on the board: uppercase, on the table-head colour. Sticks to the top while rows scroll. */
+/**
+ * The 50 px table head row: uppercase, on the table-head colour. It is the card's own top band, edge to edge with a line
+ * under it, so rows scrolling under the sticky head disappear cleanly instead of showing round its corners.
+ */
 const HEAD =
-  "sticky top-0 z-1 h-[3.125rem] bg-table-head px-4 text-left align-middle text-[0.7813rem] font-semibold tracking-[0.05em] text-navy uppercase first:rounded-l-lg last:rounded-r-lg";
+  "sticky top-0 z-1 h-[3.125rem] border-b border-line bg-table-head px-4 text-left align-middle text-[0.7813rem] font-semibold tracking-[0.05em] text-navy uppercase";
 
 /** Laptops: the board's table. Big screens: the rows scroll inside the card under a sticky head, the pager stays below. */
 export function TicketTable({
@@ -34,7 +37,7 @@ export function TicketTable({
   pages: number;
 }) {
   return (
-    <Card className="p-4 max-md:hidden desk:min-h-0 desk:flex-1">
+    <Card className="max-md:hidden desk:min-h-0 desk:flex-1">
       <div className="overflow-x-auto desk:min-h-0 desk:flex-1 desk:overflow-y-auto desk:overscroll-contain">
         <table className="w-full min-w-[47.5rem] border-separate border-spacing-0 text-sm">
           <thead>
@@ -159,7 +162,9 @@ export function TicketTable({
           </tbody>
         </table>
       </div>
-      <Pager f={f} total={total} pages={pages} />
+      <div className="px-4 pb-4">
+        <Pager f={f} total={total} pages={pages} />
+      </div>
     </Card>
   );
 }
