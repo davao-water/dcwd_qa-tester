@@ -1,6 +1,7 @@
 import { MessageCircleQuestionIcon, RotateCcwIcon, TicketIcon, UserCheckIcon } from "lucide-react";
 import type { Role } from "@/lib/auth/permissions";
-import { AREA_PATH_SELECT, areaPath } from "@/lib/areas/tree";
+import { areaStore } from "@/lib/areas/store";
+import { areaPath } from "@/lib/areas/tree";
 import { db } from "@/lib/db";
 import { notificationStore } from "@/lib/tickets/notifications";
 import { ticketStore } from "@/lib/tickets/store";
@@ -40,10 +41,7 @@ export async function workHome(me: { id: string; name: string; role: WorkRole } 
   const [counts, recent, myAreas, progress] = await Promise.all([
     tickets.counts(me),
     tickets.recent(me),
-    db.areaMember.findMany({
-      where: { userId: me.id },
-      select: { isLead: true, area: { select: { id: true, ...AREA_PATH_SELECT } } },
-    }),
+    areaStore(db).areasOf(me.id),
     tickets.moduleProgress(scope.value === "mine" ? me.id : undefined),
   ]);
   const unread = await notifications.unreadIds(me, recent.map((t) => t.id));

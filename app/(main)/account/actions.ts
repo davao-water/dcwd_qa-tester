@@ -89,7 +89,7 @@ export async function sendTestPush(endpoint: string): Promise<FormState> {
   const me = await requireUser();
   const send = webPushSender();
   if (!send) return { ok: false, message: "Device notifications aren't set up on the server yet." };
-  const sub = await db.pushSubscription.findFirst({ where: { userId: me.id, endpoint }, select: { id: true, endpoint: true, p256dh: true, auth: true } });
+  const sub = await push.device(me.id, endpoint);
   if (!sub) return { ok: false, message: "This device is off. Turn it on first." };
   const r = await sendTo(db, send, [sub], { ...TEST_MESSAGE, tone: (await push.tone(me.id)).tone });
   if (r.removed) return { ok: false, message: "The browser no longer accepts notifications for this device. Turn it on again." };

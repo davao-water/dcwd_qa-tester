@@ -1,9 +1,10 @@
 // Team & modules' saving and loading: the module list with who works on each, and adding, editing, deleting modules
-// and setting their members. The screen's actions check the form and permissions, then call these.
+// and setting their members. The screen's actions check the form and permissions, then call these. The dashboard
+// reads its team and module counts here too.
 
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import type { AreaInput } from "@/lib/schemas/area";
-import { nextSortOrder, placementError } from "./tree";
+import { AREA_PATH_SELECT, nextSortOrder, placementError } from "./tree";
 
 /** An area's member list as the Members dialog sends it. */
 export type AreaMembers = { areaId: string; members: string[]; lead: string | null; designers: string[] };
@@ -28,6 +29,42 @@ export function areaStore(db: PrismaClient) {
     /** Everyone who can sign in, by name: the people a module can be given. */
     activePeople() {
       return db.user.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true, role: true, designer: true, teamLead: true } });
+    },
+
+    /** Active QA testers by name (the admin dashboard's tester count and its module filter). */
+    activeQaTesters() {
+      return db.user.findMany({ where: { active: true, role: "QA" }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+    },
+
+    /** How many active developers there are. */
+    activeDeveloperCount() {
+      return db.user.count({ where: { active: true, role: "DEV" } });
+    },
+
+    /** How many active modules and sub-modules there are. */
+    async activeModuleCounts(): Promise<{ modules: number; subModules: number }> {
+      const [modules, subModules] = await Promise.all([
+        db.erpArea.count({ where: { parentId: null, active: true } }),
+        db.erpArea.count({ where: { parentId: { not: null }, active: true } }),
+      ]);
+      return { modules, subModules };
+    },
+
+    /** Active developers and QA testers who aren't in any module yet. */
+    peopleWithoutModule() {
+      return db.user.findMany({
+        where: { active: true, role: { in: ["DEV", "QA"] }, areas: { none: {} } },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, role: true },
+      });
+    },
+
+    /** The modules and sub-modules one person works on, with their full path and whether they lead it. */
+    areasOf(userId: string) {
+      return db.areaMember.findMany({
+        where: { userId },
+        select: { isLead: true, area: { select: { id: true, ...AREA_PATH_SELECT } } },
+      });
     },
 
     /**
