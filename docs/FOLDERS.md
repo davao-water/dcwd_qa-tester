@@ -48,3 +48,5 @@ one-job files a big screen was split into:
 | `tickets/[number]/_controls/` | The buttons and forms on one ticket: moves, assign, category, reply, edit, delete |
 | `tickets/[number]/_view/` | One ticket's layout: the header, the details card, the conversation, the activity log |
 | `tickets/markup/` | The screenshot markup editor, split into hooks: marks, zoom, pointer, keys |
+| `team/_dialogs/` | Team & modules' pop-up forms: add/edit a module, its Members, Assign to modules, and the people checklist they share |
+| `team/_table/` | One row of the "who owns this area" table, with the people chips |
