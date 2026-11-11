@@ -7,7 +7,7 @@ import type { ticketFormOptions } from "@/lib/tickets/form-options";
 import { LevelLabel } from "@/components/ticket-badges";
 import { AssignControl } from "../_controls/assign-control";
 import { CategoryControl } from "../_controls/category-control";
-import { Evidence } from "../conversation";
+import { Evidence } from "@/components/conversation/conversation";
 import { Detail, DetailGroup, FootFact, Unset } from "./detail-parts";
 
 /** One card holds the ticket's Details and its Report, one after the other. */

@@ -20,9 +20,9 @@ import { ConversationCard } from "./_view/conversation-card";
 import { DetailsCard } from "./_view/details-card";
 import { TicketHeader } from "./_view/ticket-header";
 import { DraftCleanup } from "./draft-cleanup";
-import { galleryImages } from "./conversation";
-import { ImageGallery } from "./image-viewer";
-import { MarkRead } from "./mark-read";
+import { galleryImages } from "@/components/conversation/conversation";
+import { ImageGallery } from "@/components/conversation/image-viewer";
+import { MarkRead } from "@/components/conversation/mark-read";
 import { TicketPane, TicketTabs } from "./ticket-tabs";
 
 // One ticket: details, conversation and history. Shown as its own page (/tickets/N) and in the panel that opens over the

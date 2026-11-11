@@ -2,7 +2,7 @@ import { ScrollToLatest } from "@/components/scroll-to-latest";
 import { Card } from "@/components/ui/card";
 import type { TicketDetail } from "@/lib/tickets/store";
 import { CommentForm } from "../_controls/comment-form";
-import { Thread } from "../conversation";
+import { Thread } from "@/components/conversation/conversation";
 
 /** The conversation: the messages and history, opened at the newest, with the reply box at the bottom. */
 export function ConversationCard({ t, meId, now }: { t: TicketDetail; meId: string; now: Date }) {
