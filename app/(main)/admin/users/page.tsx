@@ -1,29 +1,25 @@
-import { AREA_PATH_SELECT, areaPath, rootName } from "@/lib/areas/tree";
+import { AREA_PATH_SELECT, rootName } from "@/lib/areas/tree";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { SearchIcon, UsersIcon } from "lucide-react";
+import { UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { FilterSelect } from "@/components/filter-select";
-import { Field } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { TableSkeleton } from "@/components/skeletons";
-import { StatusPill } from "@/components/status-pill";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { can, GRANT_LABELS, ROLE_LABELS, ROLES, type Role } from "@/lib/auth/permissions";
+import { can, ROLE_LABELS, type Role } from "@/lib/auth/permissions";
 import { requireAction } from "@/lib/auth/session";
 import { tempAccessStore, type TempGrant } from "@/lib/auth/temp-access";
 import { db } from "@/lib/db";
-import { formatDateTime, timeAgo } from "@/lib/format";
-import { filterUsers, STATUS_LABELS, userStatus, type UserStatus } from "@/lib/users/filter";
+import { formatDateTime } from "@/lib/format";
+import { filterUsers } from "@/lib/users/filter";
 import { cn } from "@/lib/utils";
-import { ApprovalHost, PendingActions, ResetRequestActions } from "./pending-actions";
-import { DeleteUserDialog } from "./delete-user-dialog";
-import { TempAccessDialog } from "./temp-access-dialog";
-import { ResetPasswordButton, SignOutDevicesButton, UserDialog } from "./user-dialog";
+import { UserDialog } from "./_dialogs/user-dialog";
+import { UserFilters } from "./_list/user-filters";
+import { UserRow } from "./_list/user-row";
+import { ApprovalHost, PendingActions, ResetRequestActions } from "./_requests/pending-actions";
+import { RequestList } from "./_requests/request-list";
 
 export const metadata: Metadata = { title: "Users" };
 
@@ -33,8 +29,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "approval", label: "Approval" },
   { key: "reset", label: "Password reset" },
 ];
-
-const STATUS_TONE: Record<UserStatus, "ok" | "warn" | "neutral"> = { active: "ok", temp: "warn", off: "neutral" };
 
 const tempAccess = tempAccessStore(db);
 
@@ -170,42 +164,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
           <EmptyState icon={UsersIcon} title="No users yet" />
         ) : (
           <>
-            {/* A choice applies at once; search applies on Enter. It stays a plain GET form. */}
-            <form action="/admin/users" aria-label="Filter users">
-              <Card className="flex-row flex-wrap items-end gap-2.5 p-4">
-                <Field label="Search" htmlFor="uq" className="min-w-0 flex-[2_1_18.75rem]">
-                  <div className="relative">
-                    <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                    <Input id="uq" type="search" name="q" defaultValue={f.q} enterKeyHint="search" placeholder="Search nickname or email" className="pl-9" />
-                  </div>
-                </Field>
-                <Field label="Role" htmlFor="urole" className="min-w-0 flex-[1_1_9.5rem]">
-                  <FilterSelect id="urole" name="role" defaultValue={f.role} options={[{ value: "", label: "All roles" }, ...ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))]} />
-                </Field>
-                <Field label="Module" htmlFor="umodule" className="min-w-0 flex-[1_1_11rem]">
-                  <FilterSelect
-                    id="umodule"
-                    name="module"
-                    defaultValue={f.module}
-                    options={[{ value: "", label: "All modules" }, ...moduleNames.map((m) => ({ value: m, label: m })), { value: "none", label: "No module" }]}
-                  />
-                </Field>
-                <Field label="Status" htmlFor="ustatus" className="min-w-0 flex-[1_1_11rem]">
-                  <FilterSelect
-                    id="ustatus"
-                    name="status"
-                    defaultValue={f.status}
-                    options={[{ value: "", label: "All statuses" }, ...(Object.keys(STATUS_LABELS) as UserStatus[]).map((s) => ({ value: s, label: STATUS_LABELS[s] }))]}
-                  />
-                </Field>
-                <Button type="submit" variant="outline" className="sr-only focus-visible:not-sr-only">Apply filters</Button>
-                {filtered ? (
-                  <Button variant="ghost" nativeButton={false} render={<Link href="/admin/users" />}>
-                    Clear
-                  </Button>
-                ) : null}
-              </Card>
-            </form>
+            <UserFilters f={f} moduleNames={moduleNames} filtered={filtered} />
 
             <Card className="p-4 desk:min-h-0 desk:flex-1">
               <div className="overflow-x-auto desk:min-h-0 desk:flex-1 desk:overflow-y-auto desk:overscroll-contain">
@@ -221,55 +180,7 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
                     </tr>
                   </thead>
                   <tbody className="stagger">
-                    {shown.map((u) => {
-                      const status = userStatus(u);
-                      const grant = grants.get(u.id);
-                      // Admins already have every feature; a turned-off account can't sign in to use it.
-                      const lendable = u.id !== me.id && u.role !== "ADMIN" && u.active;
-                      const cell = "border-b border-line2 px-3.5 py-2 align-middle";
-                      return (
-                        // Turned-off rows keep full contrast; the Status pill says it (the board's fade was too pale).
-                        <tr key={u.id} className="transition-colors hover:bg-row-hover">
-                          <td className={cn(cell, "h-14 font-semibold")}>
-                            {u.name}
-                            {u.id === me.id ? <span className="ml-1.5 text-[0.7813rem] font-normal text-muted-foreground">(you)</span> : null}
-                          </td>
-                          <td className={cn(cell, "font-mono text-[0.8125rem] break-all")}>{u.email}</td>
-                          <td className={cell}>
-                            <span className="flex flex-wrap gap-1">
-                              <StatusPill tone="neutral">{ROLE_LABELS[u.role as Role]}</StatusPill>
-                              {u.designer ? <StatusPill tone="neutral">Designer</StatusPill> : null}
-                              {u.teamLead ? <StatusPill tone="acc">Team Lead</StatusPill> : null}
-                              {grant ? (
-                                <span title={`Temporary access: ${grant.actions.map((a) => GRANT_LABELS[a].label).join(", ")}`}>
-                                  <StatusPill tone="warn">Temp access</StatusPill>
-                                </span>
-                              ) : null}
-                            </span>
-                            {grant ? <span className="mt-1 block text-[0.75rem] text-muted-foreground">until {formatDateTime(grant.expiresAt)}</span> : null}
-                          </td>
-                          <td className={cn(cell, "text-[0.8438rem] text-body2")}>
-                            {u.areas.length ? (
-                              u.areas.map((a) => `${areaPath(a.area)}${a.isLead ? " (lead)" : ""}`).join(", ")
-                            ) : (
-                              <span className="text-muted-foreground">None</span>
-                            )}
-                          </td>
-                          <td className={cell}>
-                            <StatusPill tone={STATUS_TONE[status]}>{STATUS_LABELS[status]}</StatusPill>
-                          </td>
-                          <td className={cell}>
-                            <div className="flex justify-end gap-0.5">
-                              <UserDialog user={{ id: u.id, name: u.name, email: u.email, role: u.role as Role, designer: u.designer, teamLead: u.teamLead, active: u.active }} isSelf={u.id === me.id} />
-                              {lendable ? <TempAccessDialog user={{ id: u.id, name: u.name }} current={grant ? { actions: grant.actions, until: formatDateTime(grant.expiresAt) } : null} /> : null}
-                              {u.id !== me.id ? <ResetPasswordButton id={u.id} name={u.name} /> : null}
-                              {u.id !== me.id ? <SignOutDevicesButton id={u.id} name={u.name} /> : null}
-                              {u.id !== me.id ? <DeleteUserDialog user={{ id: u.id, name: u.name, email: u.email }} /> : null}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {shown.map((u) => <UserRow key={u.id} u={u} grant={grants.get(u.id)} meId={me.id} />)}
                   </tbody>
                 </table>
                 {shown.length === 0 ? <p className="px-4 py-8 text-center text-sm text-muted-foreground">No users match. Try another search or filter.</p> : null}
@@ -282,34 +193,5 @@ async function UsersBody({ searchParams }: { searchParams: Promise<Record<string
         )}
       </div>
     </ApprovalHost>
-  );
-}
-
-type RequestRow = { id: string; name: string; email: string; role: string; at: Date; actions: React.ReactNode };
-
-/** The Approval and Password reset tabs: a card with its explanation and one row per request. */
-function RequestList({ title, text, empty, rows }: { title: string; text: string; empty: string; rows: RequestRow[] }) {
-  return (
-    <Card role="region" aria-labelledby="requests-title" className="desk:min-h-0">
-      <div className="border-b border-line2 px-5 pt-5 pb-4">
-        <h2 id="requests-title" className="text-lg font-semibold">{title}</h2>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{text}</p>
-      </div>
-      {rows.length === 0 ? (
-        <p className="px-5 py-8 text-center text-sm text-muted-foreground">{empty}</p>
-      ) : (
-        <ul className="stagger desk:min-h-0 desk:overflow-y-auto desk:overscroll-contain">
-          {rows.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line2 px-5 py-3 last:border-b-0">
-              <span className="min-w-0 flex-[1_1_10rem] text-[0.9063rem] font-semibold">{r.name}</span>
-              <span className="min-w-0 flex-[2_1_14rem] font-mono text-[0.8438rem] break-all">{r.email}</span>
-              <StatusPill tone="neutral">{r.role}</StatusPill>
-              <span className="w-16 text-[0.8438rem] text-muted-foreground" title={formatDateTime(r.at)}>{timeAgo(r.at)}</span>
-              <span className="ml-auto">{r.actions}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
   );
 }
