@@ -64,6 +64,17 @@ describe("pushStore and notifyTicket", () => {
     expect(await s.devices(dev.id)).toHaveLength(0);
   });
 
+  it("forgets every device of one person, and only theirs", async () => {
+    const s = pushStore(db);
+    await s.subscribe(dev.id, sub("phone"), "Chrome on Android");
+    await s.subscribe(dev.id, sub("laptop"), "Edge on Windows");
+    await s.subscribe(qa.id, sub("qa"), "Chrome on Windows");
+
+    await s.forgetDevices(dev.id);
+    expect(await s.devices(dev.id)).toHaveLength(0);
+    expect(await s.devices(qa.id)).toHaveLength(1);
+  });
+
   it("saves work hours", async () => {
     const s = pushStore(db);
     await s.setWorkHours(dev.id, { offHoursPush: "NONE", workStartMin: 480, workEndMin: 1020, workDays: 62 });

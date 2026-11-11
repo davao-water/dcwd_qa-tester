@@ -6,12 +6,15 @@ import { can } from "@/lib/auth/permissions";
 import { auth, requireAction } from "@/lib/auth/session";
 import { TempAccessError, tempAccessStore } from "@/lib/auth/temp-access";
 import { db } from "@/lib/db";
+import { pushStore } from "@/lib/push/store";
 import { fromDbError, fromZodError, text, type FormState } from "@/lib/form";
 import { userInput, userUpdateInput } from "@/lib/schemas/user";
 import { removeObjects } from "@/lib/uploads/storage";
 import { UserDeleteError, userDeletion, type DeletionPreview } from "@/lib/users/delete";
+import { userAdminStore } from "@/lib/users/store";
 
 const deletion = userDeletion(db);
+const accounts = userAdminStore(db);
 
 /** The temporary password is returned once, shown to the admin, and never stored in plain text. */
 export type UserFormState = FormState & { tempPassword?: string; email?: string };
@@ -54,12 +57,9 @@ export async function updateUser(_prev: UserFormState, fd: FormData): Promise<Us
   if (id === me.id && !parsed.data.active) return { ok: false, message: "You can't turn off your own account." };
   if (await auth.wouldRemoveLastAdmin(id, parsed.data)) return { ok: false, message: "Keep at least one active admin, or nobody can manage users." };
 
-  // A pending sign-up has no usable password yet, so it is turned on only through Approve, which creates one.
-  const target = await db.user.findUnique({ where: { id }, select: { pending: true } });
-  if (target?.pending && parsed.data.active) return { ok: false, message: "Use Approve in the list above. It creates their temporary password." };
-
   try {
-    await db.user.update({ where: { id }, data: parsed.data });
+    const problem = await accounts.update(id, parsed.data);
+    if (problem) return { ok: false, message: problem };
   } catch (e) {
     return duplicateEmail(e) ?? fromDbError(e);
   }
@@ -99,7 +99,7 @@ export async function deleteUser(_prev: FormState, fd: FormData): Promise<FormSt
  */
 export async function approveSignUp(id: string): Promise<UserFormState> {
   await requireAction("users.requests");
-  const user = await db.user.findUnique({ where: { id }, select: { email: true } });
+  const user = await accounts.contact(id);
   const result = user ? await auth.approveSignUp(id, () => generateTempPassword()) : null;
   if (!user || !result) return { ok: false, message: "This request was already handled. Refresh the page." };
   // No revalidatePath here: refreshing now would remove the request's row, and the dialog with it. The dialog refreshes
@@ -122,7 +122,7 @@ export async function rejectSignUp(id: string): Promise<FormState> {
 export async function resetPassword(id: string): Promise<UserFormState> {
   const me = await requireAction("users.requests");
   if (id === me.id) return { ok: false, message: "Change your own password in My account." };
-  const user = await db.user.findUnique({ where: { id }, select: { email: true, role: true, resetRequestedAt: true } });
+  const user = await accounts.contact(id);
   if (!user) return { ok: false, message: "The user no longer exists. Refresh the page." };
   if (!can(me, "users.manage") && (!user.resetRequestedAt || user.role === "ADMIN")) {
     return { ok: false, message: "Only an admin can reset this password." };
@@ -144,7 +144,7 @@ export async function signOutAllDevices(id: string): Promise<FormState> {
   const me = await requireAction("users.manage");
   if (id === me.id) return { ok: false, message: "Use Sign out on your own devices." };
   await auth.deleteUserSessions(id);
-  await db.pushSubscription.deleteMany({ where: { userId: id } });
+  await pushStore(db).forgetDevices(id);
   return { ok: true };
 }
 
