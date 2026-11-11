@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { GRANT_LABELS, GRANTABLE, type GrantableAction } from "@/lib/auth/permissions";
 import { MAX_TEMP_HOURS as MAX_HOURS } from "@/lib/auth/temp-access";
 import { initialFormState, type FormState } from "@/lib/form";
-import { endTempAccess, giveTempAccess } from "./actions";
+import { endTempAccess, giveTempAccess } from "../actions";
 
 /**
  * Admin → Users: lend someone chosen admin features for 1–72 hours, or end it early. Managing accounts and roles is

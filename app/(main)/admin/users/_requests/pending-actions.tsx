@@ -8,8 +8,9 @@ import { closeAllowed, CloseGuardProvider, useCloseGuardRef } from "@/components
 import { InlineAlert } from "@/components/inline-alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { approveSignUp, dismissResetRequest, rejectSignUp, type UserFormState } from "./actions";
-import { ResetPasswordButton, TempPassword } from "./user-dialog";
+import { approveSignUp, dismissResetRequest, rejectSignUp, type UserFormState } from "../actions";
+import { ResetPasswordButton } from "../_dialogs/reset-password-button";
+import { TempPassword } from "../_dialogs/temp-password";
 
 // Approving or rejecting moves the request out of the Approval list as soon as the page refreshes, which would take a
 // dialog inside that row with it, temporary password and all. So the dialogs live in ApprovalHost, which wraps the

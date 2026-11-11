@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { formatBytes } from "@/lib/format";
 import { initialFormState, type FormState } from "@/lib/form";
 import type { DeletionPreview } from "@/lib/users/delete";
-import { deleteUser, deletionPreview } from "./actions";
+import { deleteUser, deletionPreview } from "../actions";
 
 /**
  * Deletes an account and everything it made, like DeleteTicketDialog: a red box spelling out what goes (counted when
