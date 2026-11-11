@@ -64,6 +64,13 @@ describe("pushStore and notifyTicket", () => {
     expect(await s.devices(dev.id)).toHaveLength(0);
   });
 
+  it("gives one device's subscription for sending, only to its owner", async () => {
+    const s = pushStore(db);
+    await s.subscribe(dev.id, sub("phone"), "Chrome on Android");
+    expect(await s.device(dev.id, sub("phone").endpoint)).toMatchObject({ endpoint: sub("phone").endpoint, p256dh: "p-phone", auth: "a-phone" });
+    expect(await s.device(qa.id, sub("phone").endpoint)).toBeNull();
+  });
+
   it("forgets every device of one person, and only theirs", async () => {
     const s = pushStore(db);
     await s.subscribe(dev.id, sub("phone"), "Chrome on Android");

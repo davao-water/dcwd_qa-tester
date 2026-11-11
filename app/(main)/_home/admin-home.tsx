@@ -1,6 +1,7 @@
 import { BoxesIcon, CodeIcon, FlaskConicalIcon, TicketIcon } from "lucide-react";
 import { ROLE_LABELS, type Role } from "@/lib/auth/permissions";
 import type { requireUser } from "@/lib/auth/session";
+import { areaStore } from "@/lib/areas/store";
 import { db } from "@/lib/db";
 import { notificationStore } from "@/lib/tickets/notifications";
 import { ticketStore } from "@/lib/tickets/store";
@@ -14,24 +15,20 @@ import { plural } from "./words";
 
 const tickets = ticketStore(db);
 const notifications = notificationStore(db);
+const areas = areaStore(db);
 
 type Me = Awaited<ReturnType<typeof requireUser>>;
 
 /** Admins look after people and modules: how big the team and directory are, the newest tickets, and who needs a module. */
 export async function adminHome(me: Me, modulesParam: string) {
-  const qaTesters = await db.user.findMany({ where: { active: true, role: "QA" }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  const qaTesters = await areas.activeQaTesters();
   const scope = scopeFor(modulesParam, true, qaTesters);
-  const [total, devs, modules, subModules, newest, unassigned, progress] = await Promise.all([
+  const [total, devs, { modules, subModules }, newest, unassigned, progress] = await Promise.all([
     tickets.total(me),
-    db.user.count({ where: { active: true, role: "DEV" } }),
-    db.erpArea.count({ where: { parentId: null, active: true } }),
-    db.erpArea.count({ where: { parentId: { not: null }, active: true } }),
+    areas.activeDeveloperCount(),
+    areas.activeModuleCounts(),
     tickets.recent(me, 6, true),
-    db.user.findMany({
-      where: { active: true, role: { in: ["DEV", "QA"] }, areas: { none: {} } },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, role: true },
-    }),
+    areas.peopleWithoutModule(),
     tickets.moduleProgress(scope.forUserId),
   ]);
   const unread = await notifications.unreadIds(me, newest.map((t) => t.id));

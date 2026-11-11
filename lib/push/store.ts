@@ -25,6 +25,11 @@ export function pushStore(db: PrismaClient) {
       return (await db.pushSubscription.count({ where: { userId, endpoint } })) > 0;
     },
 
+    /** This person's subscription on one device, as the sender needs it; null when that device is off. */
+    async device(userId: string, endpoint: string) {
+      return db.pushSubscription.findFirst({ where: { userId, endpoint }, select: { id: true, endpoint: true, p256dh: true, auth: true } });
+    },
+
     async devices(userId: string) {
       return db.pushSubscription.findMany({ where: { userId }, select: { id: true, device: true, createdAt: true, lastSentAt: true }, orderBy: { createdAt: "asc" } });
     },

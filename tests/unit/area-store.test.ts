@@ -116,3 +116,28 @@ describe("areaStore loading", () => {
     expect((await store.activePeople()).map((p) => p.name)).toEqual([ann.name, zed.name]);
   });
 });
+
+describe("areaStore dashboard counts", () => {
+  it("counts active testers, developers, modules and sub-modules, and finds people without a module", async () => {
+    const billing = await db.erpArea.create({ data: { name: "Billing" } });
+    await db.erpArea.create({ data: { name: "Ledger", parentId: billing.id } });
+    await db.erpArea.create({ data: { name: "Old", active: false } });
+    const [zoe, ann, ben] = await Promise.all([person("Zoe", "QA"), person("Ann", "QA"), person("Ben", "DEV")]);
+    await Promise.all([person("Cy", "DEV"), person("Gone", "DEV", { active: false }), person("Ada", "ADMIN")]);
+    await db.areaMember.createMany({ data: [zoe, ben].map((u) => ({ areaId: billing.id, userId: u.id })) });
+
+    expect((await store.activeQaTesters()).map((p) => p.name)).toEqual([ann.name, zoe.name]);
+    expect(await store.activeDeveloperCount()).toBe(2);
+    expect(await store.activeModuleCounts()).toEqual({ modules: 1, subModules: 1 });
+    expect((await store.peopleWithoutModule()).map((p) => p.name)).toEqual(["Ann", "Cy"]);
+  });
+
+  it("lists the areas one person works on, with their path and lead mark", async () => {
+    const billing = await db.erpArea.create({ data: { name: "Billing" } });
+    const ledger = await db.erpArea.create({ data: { name: "Ledger", parentId: billing.id } });
+    const ben = await person("Ben", "DEV");
+    await db.areaMember.create({ data: { areaId: ledger.id, userId: ben.id, isLead: true } });
+
+    expect(await store.areasOf(ben.id)).toEqual([{ isLead: true, area: { id: ledger.id, name: "Ledger", parent: { name: "Billing", parent: null } } }]);
+  });
+});
