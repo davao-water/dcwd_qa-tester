@@ -15,7 +15,7 @@ Think of QA Hub as a **school building**. Each folder is a room with one job.
 | `prisma/` | The cabinet's blueprint | `schema.prisma` describes every table in the database; `migrations/` is the history of every change to it. |
 | `public/` | The noticeboard | Pictures, icons and sounds anyone's browser can fetch directly. |
 | `scripts/` | The janitor's tools | Commands you run by hand: make a user, reset a password, back up, restore. |
-| `tests/` | The exam room | Automatic checks that prove the filing cabinet (`lib/`) still works. `npx vitest run` runs them all. |
+| `tests/` | The exam room | Automatic checks that prove the filing cabinet (`lib/`) still works, one file per topic (`ticket-store-lists.test.ts`, `dar-period.test.ts`, …). `tests/unit/helpers/` holds the set-up several exams share, like a fresh practice database. `npx vitest run` runs them all. |
 | `docs/` | The library | Guides: how to run things (`OPERATIONS.md`), the plan (`PLAN.md`), word meanings (`glossary.md`), and this page. |
 
 ## The house rules
