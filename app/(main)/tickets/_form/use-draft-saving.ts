@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { DRAFT_FIELDS, draftKey, isEmptyDraft, type DraftFile, type TicketDraft } from "@/lib/tickets/draft";
-import type { ImageAttachments } from "../_images/use-image-attachments";
-import type { useVideoUpload } from "../video-picker";
+import type { ImageAttachments } from "@/components/attachments/use-image-attachments";
+import type { useVideoUpload } from "@/components/attachments/video-picker";
 import { storage } from "./storage";
 
 /**

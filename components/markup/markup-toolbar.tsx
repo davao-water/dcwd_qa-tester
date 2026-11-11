@@ -1,7 +1,7 @@
 "use client";
 
 import { Redo2Icon, Trash2Icon, Undo2Icon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { MARK_COLORS } from "@/lib/markup/colors";
 import { TEXT_SIZES, type TextSize, type Tool } from "@/lib/markup/shapes";
 import { cn } from "@/lib/utils";

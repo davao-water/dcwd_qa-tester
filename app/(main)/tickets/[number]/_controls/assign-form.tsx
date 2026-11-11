@@ -9,7 +9,7 @@ import { assignTicket } from "../../actions";
 import { AssigneeSelect } from "../../_form/assignee-select";
 import { submitKeepingInput } from "@/components/submit-keeping-input";
 import type { AreaOption, AssigneeOption } from "../../_form/types";
-import type { Ref } from "./ticket-ref";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 /** The developer picker, with an optional reason when reassigning. Also the board's Assign dialog. */
 export function AssignForm({

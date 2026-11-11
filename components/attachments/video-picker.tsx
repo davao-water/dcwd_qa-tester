@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FilmIcon, RotateCwIcon, XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { discardUpload, UploadCancelled, uploadFile, type UploadHandle } from "@/lib/uploads/client";
 import { VIDEO_MAX_BYTES, VIDEO_MAX_MB, VIDEO_MAX_SECONDS, VIDEO_TYPES, warnOnMobileData } from "@/lib/uploads/limits";
 import { formatBytes, formatDuration } from "@/lib/format";

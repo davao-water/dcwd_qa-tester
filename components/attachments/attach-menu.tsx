@@ -2,11 +2,11 @@
 
 import { Menu } from "@base-ui/react/menu";
 import { CameraIcon, FilmIcon, ImagePlusIcon, MonitorIcon, PaperclipIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { useTouchScreen } from "@/hooks/use-touch-screen";
 import { IMAGE_MAX_BYTES, MAX_IMAGES_PER_POST, VIDEO_MAX_MB } from "@/lib/uploads/limits";
-import { useCanCapture } from "./_images/capture";
-import type { ImageAttachments } from "./_images/use-image-attachments";
+import { useCanCapture } from "./capture";
+import type { ImageAttachments } from "./use-image-attachments";
 import { cameraInputId } from "./image-picker";
 import type { VideoUpload } from "./video-picker";
 

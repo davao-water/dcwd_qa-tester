@@ -2,8 +2,8 @@
 
 import { XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { canRedo, canUndo, emptyHistory, push, redo, undo } from "@/lib/markup/history";
 import { fontOf, TEXT_SIZES, textFontSize, type Shape } from "@/lib/markup/shapes";

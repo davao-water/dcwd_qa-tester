@@ -1,20 +1,20 @@
 "use client";
 
-import { useCloseGuard } from "@/components/close-guard";
-import { FormMessage } from "@/components/form-field";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { useCloseGuard } from "../close-guard";
+import { FormMessage } from "../form-field";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
 import { useTouchScreen } from "@/hooks/use-touch-screen";
 import { initialFormState, type FormState } from "@/lib/form";
 import { SendIcon } from "lucide-react";
 import { useActionState, useCallback, useState } from "react";
-import { addComment } from "../../actions";
-import { AttachMenu } from "../../attach-menu";
-import { useImageAttachments } from "../../_images/use-image-attachments";
-import { ImagePicker } from "../../image-picker";
-import { submitKeepingInput } from "@/components/submit-keeping-input";
-import { useVideoUpload, VideoPicker } from "../../video-picker";
-import type { Ref } from "./ticket-ref";
+import { addComment } from "@/app/(main)/tickets/actions";
+import { AttachMenu } from "../attachments/attach-menu";
+import { useImageAttachments } from "../attachments/use-image-attachments";
+import { ImagePicker } from "../attachments/image-picker";
+import { submitKeepingInput } from "../submit-keeping-input";
+import { useVideoUpload, VideoPicker } from "../attachments/video-picker";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 /** `replyTo`: on the ticket page, the other person's name (or "" if there is none yet), for a visible label and the fuller buttons. */
 export function CommentForm({

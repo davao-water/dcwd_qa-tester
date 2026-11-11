@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 
 /** "Leave?" under the screenshot, after the corner X, when leaving would lose something. */
 export function LeaveNotice({ isEdit, onStay, onLeave }: { isEdit: boolean; onStay: () => void; onLeave: () => void }) {

@@ -6,7 +6,7 @@ import { initialFormState } from "@/lib/form";
 import { CATEGORY_LABELS, NO_CATEGORY, TICKET_CATEGORIES, type TicketCategoryValue } from "@/lib/tickets/workflow";
 import { startTransition, useActionState } from "react";
 import { categorizeTicket } from "../../actions";
-import type { Ref } from "./ticket-ref";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 /** The Category row for those allowed to change it (canCategorize). A choice saves straight away, with a line in the activity log. */
 export function CategoryControl({

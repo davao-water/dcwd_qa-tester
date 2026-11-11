@@ -1,15 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { useTouchScreen } from "@/hooks/use-touch-screen";
 import { formatBytes } from "@/lib/format";
 import { IMAGE_MAX_BYTES, IMAGE_TYPES, MAX_IMAGES_PER_POST } from "@/lib/uploads/limits";
 import { cn } from "@/lib/utils";
 import { CameraIcon, ImageIcon, ImagePlusIcon, MonitorIcon, PencilIcon, RotateCwIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useCanCapture } from "./_images/capture";
-import type { ImageAttachments } from "./_images/use-image-attachments";
-import { MarkupEditor } from "./markup/markup-editor";
+import { useCanCapture } from "./capture";
+import type { ImageAttachments } from "./use-image-attachments";
+import { MarkupEditor } from "../markup/markup-editor";
 
 // Images for a ticket or comment: what is attached, with Edit, Retry and Remove, and the ways to add more. The work
 // (markup, upload, retry) is in _images/use-image-attachments.ts.
