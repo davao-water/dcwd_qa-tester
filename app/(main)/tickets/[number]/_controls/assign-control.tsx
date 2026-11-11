@@ -5,7 +5,7 @@ import { ArrowRightLeftIcon } from "lucide-react";
 import { useState } from "react";
 import type { AreaOption, AssigneeOption } from "../../_form/types";
 import { AssignForm } from "./assign-form";
-import type { Ref } from "./ticket-ref";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 /**
  * The Developer box in a ticket's details. With a developer set it shows their name and **Reassign**, which opens the

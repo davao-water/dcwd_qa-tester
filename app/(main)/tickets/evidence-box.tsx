@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useTouchScreen } from "@/hooks/use-touch-screen";
 import { IMAGE_TYPES, MAX_IMAGES_PER_POST, VIDEO_TYPES } from "@/lib/uploads/limits";
 import { cn } from "@/lib/utils";
-import { useCanCapture } from "./_images/capture";
-import type { ImageAttachments } from "./_images/use-image-attachments";
-import { cameraInputId, ImagePicker } from "./image-picker";
-import { VideoPicker, type VideoUpload } from "./video-picker";
+import { useCanCapture } from "@/components/attachments/capture";
+import type { ImageAttachments } from "@/components/attachments/use-image-attachments";
+import { cameraInputId, ImagePicker } from "@/components/attachments/image-picker";
+import { VideoPicker, type VideoUpload } from "@/components/attachments/video-picker";
 
 // New ticket's one upload box for screenshots and a video. The two pickers keep their own uploads, markup, progress, retry and
 // checks and only show what was added; this box adds the ways in. Clicking it arms paste, so it says what to do next.

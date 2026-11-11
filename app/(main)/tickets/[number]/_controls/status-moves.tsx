@@ -9,7 +9,7 @@ import { Menu } from "@base-ui/react/menu";
 import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
 import { MoveForm } from "./move-form";
-import type { Ref } from "./ticket-ref";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 /**
  * The ticket's moves for this person (lib/tickets/moves.ts): their next step as the main button, at most one equally

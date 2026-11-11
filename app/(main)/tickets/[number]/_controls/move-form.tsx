@@ -10,7 +10,7 @@ import type { TicketStatus, Transition } from "@/lib/tickets/workflow";
 import { useActionState, useState } from "react";
 import { handBackTicket, moveTicket } from "../../actions";
 import { submitKeepingInput } from "@/components/submit-keeping-input";
-import type { Ref } from "./ticket-ref";
+import type { Ref } from "@/lib/tickets/ticket-ref";
 
 const NOTE_HINTS: Partial<Record<TicketStatus, string>> = {
   NEED_INFO: "What do you need from QA? They'll see this in the thread.",

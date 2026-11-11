@@ -9,7 +9,7 @@ Think of QA Hub as a **school building**. Each folder is a room with one job.
 | `app/login/` | The front door | The sign-in screen, with no sidebar. |
 | `app/api/` | The back office | Jobs a computer calls, not a person: the daily clean-up and notifications. |
 | `app/_styles/` | The paint cupboard | The app's colours, dark mode and animations, one file per job. `app/globals.css` lists them in order, and the order matters: a later file's paint goes on top. |
-| `components/` | **The toy box** (shared pieces) | Buttons, pickers, dialogs, the sidebar: pieces two or more screens share. `components/ui/` holds the store-bought blocks (from shadcn) we don't edit much. `components/skeletons/` holds the grey "loading…" shapes, one file per screen; its `index.ts` lists them all. `components/conversation/` holds a ticket's message thread, its picture viewer and the "mark as read" helper, shared by a ticket's page and My inbox. |
+| `components/` | **The toy box** (shared pieces) | Buttons, pickers, dialogs, the sidebar: pieces two or more screens share. `components/ui/` holds the store-bought blocks (from shadcn) we don't edit much. `components/skeletons/` holds the grey "loading…" shapes, one file per screen; its `index.ts` lists them all. `components/conversation/` holds a ticket's message thread, its picture viewer, the reply form and the "mark as read" helper, shared by a ticket's page and My inbox. `components/attachments/` adds photos and videos to a ticket or a reply (the attach menu, image and video pickers, screen capture), and `components/markup/` is the screenshot markup editor they open. |
 | `hooks/` | Little helpers for the toys | Small tricks screens reuse, like "is this a phone?" or "is the keyboard open?". |
 | `lib/` | **The filing cabinet** ("data") | Saving and loading: reading and writing the database, uploads, logins and permissions, the rules for tickets and DAR. No screens here, only the brains. |
 | `data/` | The bookshelf | Fixed lists that don't change while the app runs, like `erp-areas.json` (the ERP modules). |
@@ -36,7 +36,7 @@ A screen folder keeps its own small pieces right next to it. For example `app/(m
 - `actions.ts` holds the buttons' "save this" jobs (Server Actions), which hand the work to `lib/tickets/`.
 - Other files are pieces only the tickets screens use. If another screen ever needs one, it moves to `components/`.
 
-**Folders that start with `_`** (like `_list/`, `_board/`, `_form/`, `_images/`) are a screen's private drawers. The
+**Folders that start with `_`** (like `_list/`, `_board/`, `_form/`, `_controls/`) are a screen's private drawers. The
 underscore tells Next.js "this is not a web address", so nothing in there becomes a page. Each drawer holds the small
 one-job files a big screen was split into:
 
@@ -46,10 +46,8 @@ one-job files a big screen was split into:
 | `tickets/_list/` | The pieces of the tickets list: tabs, filters, table, pager, the board's columns |
 | `tickets/_board/` | The board's pieces: a card, its ⋯ menu, the column tabs, the move dialog, drag-and-drop with Undo |
 | `tickets/_form/` | The New ticket / Edit form's pieces: type picker, details fields, draft saving |
-| `tickets/_images/` | Adding screenshots: the upload hook and screen capture |
 | `tickets/[number]/_controls/` | The buttons and forms on one ticket: moves, assign, category, reply, edit, delete |
 | `tickets/[number]/_view/` | One ticket's layout: the header, the details card, the conversation, the activity log |
-| `tickets/markup/` | The screenshot markup editor, split into hooks: marks, zoom, pointer, keys |
 | `team/_dialogs/` | Team & modules' pop-up forms: add/edit a module, its Members, Assign to modules, and the people checklist they share |
 | `team/_table/` | One row of the "who owns this area" table, with the people chips |
 | `admin/users/_dialogs/` | Users' pop-ups: new/edit user, the one-time password, reset password, sign out devices, delete, temporary access |
