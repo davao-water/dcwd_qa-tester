@@ -56,3 +56,5 @@ next-env.d.ts
 
 # but share the list of setting names
 !.env.example
+
+

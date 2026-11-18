@@ -1,0 +1,47 @@
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn.lock
+
+# Build outputs
+.next
+out
+dist
+build
+coverage
+*.tsbuildinfo
+
+# Git
+.git
+.gitignore
+
+# Local environment secrets
+.env
+.env.*
+!.env.example
+
+# Development tools
+.vscode
+.idea
+.claude
+.agents
+
+# Documentation
+docs
+*.md
+
+# Tests
+tests
+test-results
+playwright-report
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+
+# Miscellaneous
+.DS_Store
+*.log
+**/@eaDir
