@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  basePath: "/apps/qa",
   /* config options here */
   // Files never pass through Server Actions or routes (Vercel caps request bodies at 4.5 MB): the browser uploads
   // them straight to Supabase Storage with a signed URL, so the default body limits stay.
